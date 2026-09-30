@@ -131,13 +131,6 @@ NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secure-random-secret"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
-# Hostinger SMTP Mailer
-SMTP_HOST="smtp.hostinger.com"
-SMTP_PORT=465
-SMTP_USER="mailer.flexstudio@kauxync.in"
-SMTP_PASSWORD="your-hostinger-email-password"
-CONTACT_RECEIVER_EMAIL="flexstudio@kauxync.in"
-
 # Cashfree (Optional for test purchases)
 CASHFREE_APP_ID="your_cashfree_app_id"
 CASHFREE_SECRET_KEY="your_cashfree_secret_key"
