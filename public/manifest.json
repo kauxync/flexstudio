@@ -1,0 +1,21 @@
+{
+  "name": "FlexStudioo — Premium Digital Marketplace",
+  "short_name": "FlexStudioo",
+  "description": "High-quality web templates, UI kits, source code, SaaS boilerplates, and professional web development services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090714",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
