@@ -92,11 +92,6 @@ export type WishlistItem = Prisma.WishlistItemModel
  */
 export type Review = Prisma.ReviewModel
 /**
- * Model BlogPost
- * 
- */
-export type BlogPost = Prisma.BlogPostModel
-/**
  * Model Newsletter
  * 
  */

@@ -50,10 +50,33 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
 
     const { slug } = await params;
 
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: { orderItems: { select: { id: true } } },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    if (product.orderItems.length > 0) {
+      // Archive product to preserve purchase history and prevent foreign key errors
+      await prisma.product.update({
+        where: { slug },
+        data: { status: "archived" },
+      });
+      return NextResponse.json({
+        success: true,
+        archived: true,
+        message: "Product has order history, so it was archived rather than deleted.",
+      });
+    }
+
     await prisma.product.delete({ where: { slug } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("[PRODUCT_DELETE]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -123,7 +123,7 @@ export default function AdminOrdersPage() {
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items.some((i) => i.product.title.toLowerCase().includes(searchQuery.toLowerCase()));
+      order.items?.some((i) => i.product?.title?.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
 
@@ -289,9 +289,9 @@ export default function AdminOrdersPage() {
                           {order.items.slice(0, 3).map((item) => (
                             <img
                               key={item.id}
-                              src={item.product.thumbnail}
-                              alt={item.product.title}
-                              title={item.product.title}
+                              src={item.product?.thumbnail || "/placeholder.png"}
+                              alt={item.product?.title || "Product"}
+                              title={item.product?.title || "Product"}
                               className="w-7 h-7 rounded-lg object-cover border border-border/40"
                             />
                           ))}
@@ -417,14 +417,14 @@ export default function AdminOrdersPage() {
                   <div key={item.id} className="p-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <img
-                        src={item.product.thumbnail}
-                        alt={item.product.title}
+                        src={item.product?.thumbnail || "/placeholder.png"}
+                        alt={item.product?.title || "Product"}
                         className="w-10 h-10 rounded-lg object-cover border border-border/30"
                       />
                       <div>
-                        <p className="font-semibold text-foreground">{item.product.title}</p>
+                        <p className="font-semibold text-foreground">{item.product?.title || "Unknown Product"}</p>
                         <p className="text-[10px] text-muted-foreground capitalize">
-                          {item.product.type} · {item.license} license
+                          {item.product?.type || "Item"} · {item.license} license
                         </p>
                       </div>
                     </div>

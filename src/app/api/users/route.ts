@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
-// GET - List all users (super_admin only)
+// GET - List all users (admin & super_admin)
 export async function GET() {
   try {
     const session = await auth();
-    if (!session?.user || (session.user as any).role !== "super_admin") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user || (role !== "admin" && role !== "super_admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -33,11 +34,12 @@ export async function GET() {
   }
 }
 
-// POST - Create new user (super_admin only)
+// POST - Create new user (admin & super_admin)
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || (session.user as any).role !== "super_admin") {
+    const currentRole = (session?.user as any)?.role;
+    if (!session?.user || (currentRole !== "admin" && currentRole !== "super_admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -75,11 +77,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH - Update user role (super_admin only)
+// PATCH - Update user role (admin & super_admin)
 export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || (session.user as any).role !== "super_admin") {
+    const currentRole = (session?.user as any)?.role;
+    if (!session?.user || (currentRole !== "admin" && currentRole !== "super_admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -93,9 +96,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
-    // Prevent removing own super_admin role
-    if (userId === (session.user as any).id && role !== "super_admin") {
-      return NextResponse.json({ error: "Cannot remove your own super_admin role" }, { status: 400 });
+    // Prevent removing own admin privileges
+    if (userId === (session.user as any).id && role === "user") {
+      return NextResponse.json({ error: "Cannot remove your own administrative privileges" }, { status: 400 });
     }
 
     const user = await prisma.user.update({
@@ -110,11 +113,12 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE - Delete user (super_admin only)
+// DELETE - Delete user (admin & super_admin)
 export async function DELETE(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || (session.user as any).role !== "super_admin") {
+    const currentRole = (session?.user as any)?.role;
+    if (!session?.user || (currentRole !== "admin" && currentRole !== "super_admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

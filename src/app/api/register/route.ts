@@ -22,8 +22,15 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    const userCount = await prisma.user.count();
+    const isFirstUser = userCount === 0;
+    const isAdminEmail =
+      email.toLowerCase() === "flexstudio@kauxync.in" ||
+      (process.env.ADMIN_EMAIL && email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase());
+    const role = (isFirstUser || isAdminEmail) ? "super_admin" : "user";
+
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: { name, email, password: hashedPassword, role },
     });
 
     // Create verification token

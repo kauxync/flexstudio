@@ -98,9 +98,9 @@ export default function AdminReviewsPage() {
     const matchesRating = ratingFilter === "all" || r.rating === ratingFilter;
     const matchesSearch =
       searchQuery === "" ||
-      r.product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (r.user.name && r.user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      r.comment.toLowerCase().includes(searchQuery.toLowerCase());
+      Boolean(r.product?.title && r.product.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      Boolean(r.user?.name && r.user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      Boolean(r.comment && r.comment.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesRating && matchesSearch;
   });
 
@@ -227,22 +227,22 @@ export default function AdminReviewsPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
                         <img
-                          src={rev.product.thumbnail}
-                          alt={rev.product.title}
+                          src={rev.product?.thumbnail || "/placeholder.png"}
+                          alt={rev.product?.title || "Product"}
                           className="w-9 h-9 rounded-lg object-cover border border-border/30 shrink-0"
                         />
                         <span className="font-semibold text-foreground truncate max-w-[140px]">
-                          {rev.product.title}
+                          {rev.product?.title || "Product"}
                         </span>
                       </div>
                     </td>
 
                     <td className="py-3 px-4">
                       <p className="font-semibold text-foreground truncate max-w-[120px]">
-                        {rev.user.name || "Anonymous"}
+                        {rev.user?.name || "Anonymous"}
                       </p>
                       <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">
-                        {rev.user.email}
+                        {rev.user?.email || "No email"}
                       </p>
                     </td>
 

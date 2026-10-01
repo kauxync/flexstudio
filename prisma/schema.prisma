@@ -29,7 +29,6 @@ model User {
   orders        Order[]
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
-  blogPosts     BlogPost[]
   products      Product[]
   activities    Activity[]
   couponUsage   CouponUsage[]
@@ -208,34 +207,6 @@ model Review {
 
   @@unique([userId, productId])
   @@map("reviews")
-}
-
-// =====================
-// Blog
-// =====================
-
-model BlogPost {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  excerpt     String
-  content     String
-  category    String
-  tags        String[]
-  readingTime Int      @map("reading_time")
-  featured    Boolean  @default(false)
-  thumbnail   String
-  status      String   @default("published") // published | draft
-  authorId    String?  @map("author_id")
-  publishedAt DateTime @default(now()) @map("published_at")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  author User? @relation(fields: [authorId], references: [id])
-
-  @@index([category])
-  @@index([featured])
-  @@map("blog_posts")
 }
 
 // =====================

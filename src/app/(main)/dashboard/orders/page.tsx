@@ -203,7 +203,7 @@ export default function OrdersPage() {
                     {/* Items */}
                     <div className="space-y-3">
                       {order.items.map((item) => {
-                        const tier = LICENSE_TIERS[item.license || "personal"];
+                        const tier = LICENSE_TIERS[item.license as keyof typeof LICENSE_TIERS] || LICENSE_TIERS.personal;
                         return (
                           <div
                             key={item.id}
@@ -211,20 +211,20 @@ export default function OrdersPage() {
                           >
                             <div className="flex items-center gap-3.5 min-w-0">
                               <img
-                                src={item.product.thumbnail}
-                                alt={item.product.title}
+                                src={item.product?.thumbnail || "/placeholder.png"}
+                                alt={item.product?.title || "Product"}
                                 className="w-14 h-14 rounded-xl object-cover border border-border/30 shrink-0"
                               />
                               <div className="min-w-0">
                                 <p className="text-sm font-bold text-foreground truncate">
-                                  {item.product.title}
+                                  {item.product?.title || "Product"}
                                 </p>
                                 <div className="flex items-center gap-2 mt-0.5">
                                   <Badge variant="outline" className="text-[10px] px-2 py-0 border-primary/30 text-primary">
-                                    {tier.name}
+                                    {tier?.name || "Standard"}
                                   </Badge>
                                   <span className="text-[10px] text-muted-foreground">
-                                    {tier.badge}
+                                    {tier?.badge || "License"}
                                   </span>
                                 </div>
                               </div>
@@ -253,7 +253,7 @@ export default function OrdersPage() {
 
                               {/* Download Link */}
                               {order.status === "paid" ? (
-                                item.product.zipUrl ? (
+                                item.product?.zipUrl ? (
                                   <a
                                     href={item.product.zipUrl}
                                     target="_blank"
@@ -263,7 +263,7 @@ export default function OrdersPage() {
                                     <Download className="w-3.5 h-3.5" />
                                     <span>Download ZIP</span>
                                   </a>
-                                ) : (
+                                ) : item.product?.slug ? (
                                   <Link
                                     href={`/templates/${item.product.slug}/download`}
                                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-primary-fg hover:bg-primary-hover text-xs font-bold shadow-md shadow-primary/20 transition-all"
@@ -271,7 +271,7 @@ export default function OrdersPage() {
                                     <Download className="w-3.5 h-3.5" />
                                     <span>Access Files</span>
                                   </Link>
-                                )
+                                ) : null
                               ) : (
                                 <span className="text-xs text-amber-400">Payment pending</span>
                               )}
@@ -365,7 +365,7 @@ export default function OrdersPage() {
                   {activeInvoice.items.map((item) => (
                     <tr key={item.id}>
                       <td className="py-3 px-3 font-medium text-foreground">
-                        {item.product.title}
+                        {item.product?.title || "Purchased Product"}
                       </td>
                       <td className="py-3 px-3 text-muted-foreground capitalize">
                         {item.license} License

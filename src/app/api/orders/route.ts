@@ -14,22 +14,13 @@ export async function GET() {
     const userRole = (session.user as any).role;
     const isAdmin = userRole === "admin" || userRole === "super_admin";
 
-    // Clean up old pending orders (stale from cancelled payments)
-    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000);
-    await prisma.orderItem.deleteMany({
-      where: { order: { status: "pending", createdAt: { lt: tenMinAgo } } },
-    });
-    await prisma.order.deleteMany({
-      where: { status: "pending", createdAt: { lt: tenMinAgo } },
-    });
-
     const orders = await prisma.order.findMany({
       where: isAdmin ? {} : { userId: (session.user as any).id },
       include: {
         items: {
           include: { product: true },
         },
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, phone: true } },
       },
       orderBy: { createdAt: "desc" },
     });

@@ -407,7 +407,6 @@ export const ModelName = {
   CartItem: 'CartItem',
   WishlistItem: 'WishlistItem',
   Review: 'Review',
-  BlogPost: 'BlogPost',
   Newsletter: 'Newsletter',
   Activity: 'Activity',
   Coupon: 'Coupon',
@@ -427,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "product" | "order" | "orderItem" | "cartItem" | "wishlistItem" | "review" | "blogPost" | "newsletter" | "activity" | "coupon" | "couponUsage"
+    modelProps: "user" | "account" | "session" | "verificationToken" | "product" | "order" | "orderItem" | "cartItem" | "wishlistItem" | "review" | "newsletter" | "activity" | "coupon" | "couponUsage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1171,80 +1170,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    BlogPost: {
-      payload: Prisma.$BlogPostPayload<ExtArgs>
-      fields: Prisma.BlogPostFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.BlogPostFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.BlogPostFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>
-        }
-        findFirst: {
-          args: Prisma.BlogPostFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.BlogPostFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>
-        }
-        findMany: {
-          args: Prisma.BlogPostFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>[]
-        }
-        create: {
-          args: Prisma.BlogPostCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>
-        }
-        createMany: {
-          args: Prisma.BlogPostCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.BlogPostCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>[]
-        }
-        delete: {
-          args: Prisma.BlogPostDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>
-        }
-        update: {
-          args: Prisma.BlogPostUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>
-        }
-        deleteMany: {
-          args: Prisma.BlogPostDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.BlogPostUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.BlogPostUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>[]
-        }
-        upsert: {
-          args: Prisma.BlogPostUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPostPayload>
-        }
-        aggregate: {
-          args: Prisma.BlogPostAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateBlogPost>
-        }
-        groupBy: {
-          args: Prisma.BlogPostGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.BlogPostGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.BlogPostCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.BlogPostCountAggregateOutputType> | number
-        }
-      }
-    }
     Newsletter: {
       payload: Prisma.$NewsletterPayload<ExtArgs>
       fields: Prisma.NewsletterFieldRefs
@@ -1728,27 +1653,6 @@ export const ReviewScalarFieldEnum = {
 export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum]
 
 
-export const BlogPostScalarFieldEnum = {
-  id: 'id',
-  slug: 'slug',
-  title: 'title',
-  excerpt: 'excerpt',
-  content: 'content',
-  category: 'category',
-  tags: 'tags',
-  readingTime: 'readingTime',
-  featured: 'featured',
-  thumbnail: 'thumbnail',
-  status: 'status',
-  authorId: 'authorId',
-  publishedAt: 'publishedAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type BlogPostScalarFieldEnum = (typeof BlogPostScalarFieldEnum)[keyof typeof BlogPostScalarFieldEnum]
-
-
 export const NewsletterScalarFieldEnum = {
   id: 'id',
   email: 'email',
@@ -2056,7 +1960,6 @@ export type GlobalOmitConfig = {
   cartItem?: Prisma.CartItemOmit
   wishlistItem?: Prisma.WishlistItemOmit
   review?: Prisma.ReviewOmit
-  blogPost?: Prisma.BlogPostOmit
   newsletter?: Prisma.NewsletterOmit
   activity?: Prisma.ActivityOmit
   coupon?: Prisma.CouponOmit

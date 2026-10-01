@@ -40,6 +40,7 @@ interface UserItem {
 export default function AdminUsersPage() {
   const { data: session } = useSession();
   const currentRole = (session?.user as any)?.role;
+  const isAdmin = currentRole === "admin" || currentRole === "super_admin";
   const isSuperAdmin = currentRole === "super_admin";
 
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -69,12 +70,12 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    if (isSuperAdmin) {
+    if (isAdmin) {
       fetchUsers();
-    } else {
+    } else if (session !== undefined) {
       setLoading(false);
     }
-  }, [isSuperAdmin]);
+  }, [isAdmin, session]);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });
@@ -143,15 +144,15 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (!isSuperAdmin) {
+  if (!loading && !isAdmin) {
     return (
       <div className="p-8 rounded-3xl border border-warning/30 bg-card/60 backdrop-blur-xl text-center space-y-4 max-w-lg mx-auto mt-12">
         <div className="w-12 h-12 rounded-2xl bg-warning/10 text-warning flex items-center justify-center mx-auto">
           <Lock className="w-6 h-6" />
         </div>
-        <h2 className="font-serif text-xl font-bold text-foreground">Super Administrator Required</h2>
+        <h2 className="font-serif text-xl font-bold text-foreground">Administrator Privileges Required</h2>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          User account management, credentials provisioning, and role assignment require elevated <span className="font-bold text-foreground">super_admin</span> privileges.
+          User account management, credentials provisioning, and role assignment require administrative privileges.
         </p>
       </div>
     );
