@@ -27,6 +27,47 @@ export function getUserId(session: Session | null): string | undefined {
   return session?.user?.id;
 }
 
+export async function getAuthUserId(session: Session | null): Promise<string | undefined> {
+  if (!session?.user) return undefined;
+
+  try {
+    // 1. If session has user id, check if that user ID actually exists in the DB
+    if (session.user.id) {
+      const userById = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true },
+      });
+      if (userById) return userById.id;
+    }
+
+    // 2. If user ID is stale or not found, look up by email
+    if (session.user.email) {
+      const userByEmail = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      if (userByEmail) return userByEmail.id;
+
+      // 3. Auto-provision user in DB if missing so foreign keys never fail
+      const newUser = await prisma.user.create({
+        data: {
+          name: session.user.name || session.user.email.split("@")[0],
+          email: session.user.email,
+          image: session.user.image || null,
+          role: (session.user as any).role || "user",
+          emailVerified: new Date(),
+        },
+        select: { id: true },
+      });
+      return newUser.id;
+    }
+  } catch (err) {
+    console.error("[GET_AUTH_USER_ID_ERROR]", err);
+  }
+
+  return undefined;
+}
+
 // Helper to find or create user from OAuth
 async function findOrCreateOAuthUser(profile: { email: string; name?: string; image?: string }) {
   let user = await prisma.user.findUnique({ where: { email: profile.email } });

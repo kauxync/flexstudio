@@ -21,11 +21,6 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  LICENSE_TIERS,
-  LicenseType,
-  calculateLicensePrice,
-} from "@/lib/licensing";
 
 type Device = "desktop" | "tablet" | "mobile";
 
@@ -86,7 +81,6 @@ export default function PreviewPage({ params }: { params: Promise<{ slug: string
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
-  const [selectedLicense, setSelectedLicense] = useState<LicenseType>("personal");
 
   useEffect(() => {
     fetch(`/api/products/${slug}`)
@@ -96,11 +90,11 @@ export default function PreviewPage({ params }: { params: Promise<{ slug: string
   }, [slug]);
 
   const previewUrl = product?.demoUrl || demoUrls[slug] || "https://example.com";
-  const currentPrice = product ? calculateLicensePrice(product.price, selectedLicense) : 0;
+  const currentPrice = product ? product.price : 0;
 
   const handleCheckout = () => {
     if (!product) return;
-    router.push(`/checkout?productId=${product.id}&license=${selectedLicense}&price=${currentPrice}`);
+    router.push(`/checkout?productId=${product.id}&price=${currentPrice}`);
   };
 
   return (
@@ -156,7 +150,7 @@ export default function PreviewPage({ params }: { params: Promise<{ slug: string
           ))}
         </div>
 
-        {/* Right: QR Code, License Selector & Buy Button */}
+        {/* Right: QR Code & Buy Button */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Mobile QR scan trigger */}
           <button
@@ -167,19 +161,6 @@ export default function PreviewPage({ params }: { params: Promise<{ slug: string
             <QrCode className="w-3.5 h-3.5 text-primary" />
             <span className="hidden xl:inline text-[11px]">Test on Phone</span>
           </button>
-
-          {/* License Tier Dropdown */}
-          <div className="hidden sm:block">
-            <select
-              value={selectedLicense}
-              onChange={(e) => setSelectedLicense(e.target.value as LicenseType)}
-              className="h-9 px-2.5 rounded-xl border border-border/40 bg-card/60 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="personal">Personal — 1 Site</option>
-              <option value="commercial">Commercial — Client</option>
-              <option value="extended">Extended — Unlimited</option>
-            </select>
-          </div>
 
           {/* Direct Buy Button */}
           <Button

@@ -61,7 +61,7 @@ export default function PrivacyPage() {
                 2. How We Use Your Data
               </h2>
               <p>
-                Your data is utilized exclusively for generating your license keys, dispatching digital download links, notifying you of critical product updates, and providing developer support. We never sell or license your personal information to third-party data brokers.
+                Your data is utilized exclusively for dispatching digital download links, notifying you of critical product updates, and providing developer support. We never sell or license your personal information to third-party data brokers.
               </p>
             </div>
 

@@ -16,3 +16,13 @@ export function generateTemplateCode(prefix: string = "FS"): string {
 export function isValidTemplateCode(code: string): boolean {
   return /^[A-Z0-9]{8}$/i.test(code);
 }
+
+/**
+ * Extracts an 8-character storage code from a Hostinger CDN upload URL if present.
+ * e.g. "https://dataflexstudio.kauxync.in/uploads/3F977401/banner/..." -> "3F977401"
+ */
+export function extractStorageCode(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/\/uploads\/([A-Za-z0-9]{8})\//);
+  return match ? match[1].toUpperCase() : null;
+}

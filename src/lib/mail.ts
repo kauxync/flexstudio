@@ -60,7 +60,6 @@ export async function sendContactEmail(payload: ContactMailPayload) {
     custom: "Hire Custom Web Development / Project",
     general: "General Inquiry",
     support: "Technical Support & Setup",
-    licensing: "Licensing & Agency Rights",
     billing: "Invoices & Billing",
   };
   const readableSubject = subjectLabelMap[subject] || subject;

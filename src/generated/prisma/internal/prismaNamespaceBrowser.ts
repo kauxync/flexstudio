@@ -139,6 +139,7 @@ export type VerificationTokenScalarFieldEnum = (typeof VerificationTokenScalarFi
 export const ProductScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
+  storageCode: 'storageCode',
   title: 'title',
   description: 'description',
   shortDesc: 'shortDesc',
@@ -188,9 +189,7 @@ export const OrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
   productId: 'productId',
-  price: 'price',
-  license: 'license',
-  licenseKey: 'licenseKey'
+  price: 'price'
 } as const
 
 export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
@@ -200,8 +199,7 @@ export const CartItemScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   productId: 'productId',
-  quantity: 'quantity',
-  license: 'license'
+  quantity: 'quantity'
 } as const
 
 export type CartItemScalarFieldEnum = (typeof CartItemScalarFieldEnum)[keyof typeof CartItemScalarFieldEnum]

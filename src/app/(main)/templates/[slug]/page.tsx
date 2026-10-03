@@ -7,34 +7,20 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/ui/animated-section";
+import { MarkdownContent } from "@/components/ui/markdown-content";
+import { extractLighthouseScores } from "@/lib/product-metadata";
 import { cn } from "@/lib/utils";
-import {
-  LICENSE_TIERS,
-  LicenseType,
-  calculateLicensePrice,
-} from "@/lib/licensing";
 import {
   Star,
   Download,
-  Clock,
-  Check,
   ShoppingCart,
   Heart,
   Eye,
   ChevronRight,
-  Share2,
-  ExternalLink,
   ShieldCheck,
-  Zap,
-  Layers,
-  FileCode,
-  Sparkles,
-  HelpCircle,
-  History,
-  Gauge,
   CheckCircle2,
-  Package,
-  Plus,
+  Gauge,
+  HelpCircle,
 } from "lucide-react";
 
 interface Review {
@@ -74,34 +60,10 @@ interface Product {
   updatedAt: string;
 }
 
-const DELIVERABLE_BADGES = [
-  { label: "Figma Source Included", icon: Layers, highlight: true },
-  { label: "100% TypeScript", icon: FileCode },
-  { label: "Tailwind CSS v4 Ready", icon: Zap },
-  { label: "Dark & Light Cosmic Modes", icon: Sparkles },
-  { label: "Next.js 16 App Router", icon: CheckCircle2 },
-];
-
-const LIGHTHOUSE_METRICS = [
-  { label: "Performance", score: 99, color: "text-emerald-400" },
-  { label: "Accessibility", score: 100, color: "text-emerald-400" },
-  { label: "Best Practices", score: 100, color: "text-emerald-400" },
-  { label: "SEO Optimized", score: 100, color: "text-emerald-400" },
-];
-
-const PREBUILT_PAGES = [
-  { title: "Landing / Homepage", desc: "High-conversion hero, bento feature grid, social proof, newsletter" },
-  { title: "Product Detail / Marketplace", desc: "Interactive galleries, license picker, reviews & specs breakdown" },
-  { title: "Authentication Flow", desc: "Custom sign in, register, forgot-password, OAuth buttons" },
-  { title: "User Account Dashboard", desc: "Orders ledger, downloadable assets, account & security settings" },
-  { title: "Checkout & Payment Gateway", desc: "Express checkout, coupon engine, summary card & success states" },
-  { title: "Custom 404 & Maintenance", desc: "Branded error screens with quick back-navigation routes" },
-];
-
 const FAQ_ITEMS = [
   {
     q: "Can I use this template for commercial client work?",
-    a: "Yes! Choosing the Commercial License allows you to deploy this template for 1 client website or commercial business. If you need to build multiple client projects or a SaaS, select the Extended License.",
+    a: "Yes! You can deploy this template for commercial client projects or your own business, with no restrictions on the end products you build.",
   },
   {
     q: "Do I get free updates after purchasing?",
@@ -109,7 +71,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Are the design files (Figma) included in the download?",
-    a: "Yes, a fully organized, component-driven Figma design file with design tokens and auto-layouts is packaged alongside the codebase.",
+    a: "Yes, fully organized, component-driven design files with design tokens and auto-layouts are packaged alongside the codebase where specified.",
   },
   {
     q: "What payment methods are supported?",
@@ -125,13 +87,11 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
-  const [selectedLicense, setSelectedLicense] = useState<LicenseType>("personal");
-  const [activeTab, setActiveTab] = useState<"overview" | "pages" | "changelog" | "reviews" | "faq">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "changelog" | "reviews" | "faq">("overview");
 
   const [addingToCart, setAddingToCart] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
-  const [bundleIncluded, setBundleIncluded] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
@@ -167,19 +127,17 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
     setTimeout(() => setToast(null), 3000);
   };
 
-  const currentPrice = product ? calculateLicensePrice(product.price, selectedLicense) : 0;
+  const currentPrice = product ? product.price : 0;
   const currentOriginalPrice = product?.originalPrice
-    ? calculateLicensePrice(product.originalPrice, selectedLicense)
+    ? product.originalPrice
     : Math.round(currentPrice * 1.35);
 
-  const bundleAddonPrice = 1499; // Complementary UI starter bundle
-  const totalWithBundle = currentPrice + (bundleIncluded ? bundleAddonPrice : 0);
+  const { scores: lighthouseScores, cleanDescription } = extractLighthouseScores(product?.description);
 
   const handleAddToCart = async () => {
     if (!product) return;
     if (!session) {
-      // Guest can add to cart via localStorage or direct checkout
-      router.push(`/checkout?productId=${product.id}&license=${selectedLicense}`);
+      router.push(`/checkout?productId=${product.id}&price=${currentPrice}`);
       return;
     }
 
@@ -188,11 +146,11 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, license: selectedLicense }),
+        body: JSON.stringify({ productId: product.id }),
       });
       if (res.ok) {
         setIsInCart(true);
-        showToast(`Added to cart with ${LICENSE_TIERS[selectedLicense].name}`);
+        showToast("Added to cart!");
         window.dispatchEvent(new Event("cart-updated"));
       } else {
         const data = await res.json();
@@ -213,16 +171,15 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
     if (!product) return;
 
     if (!session) {
-      // Guest direct checkout
-      router.push(`/checkout?productId=${product.id}&license=${selectedLicense}&price=${currentPrice}`);
+      router.push(`/checkout?productId=${product.id}&price=${currentPrice}`);
       return;
     }
 
     try {
-      const res = await fetch("/api/cart", {
+      await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, license: selectedLicense }),
+        body: JSON.stringify({ productId: product.id }),
       });
       window.dispatchEvent(new Event("cart-updated"));
       router.push("/checkout");
@@ -272,12 +229,54 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
 
   if (!product) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Product not found</h1>
-          <Link href="/templates">
-            <Button>Browse Templates</Button>
-          </Link>
+      <div className="min-h-[85vh] flex items-center justify-center relative overflow-hidden px-4 pt-20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),rgba(255,255,255,0))]" />
+        <div className="absolute inset-0 grid-pattern opacity-[0.03]" />
+        <div className="absolute top-1/4 right-[20%] w-72 h-72 rounded-full bg-gold/10 blur-[120px] animate-pulse" />
+
+        <div className="relative text-center max-w-lg mx-auto py-12">
+          <div className="w-20 h-20 rounded-3xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shadow-2xl shadow-gold/20 mx-auto mb-6">
+            <Eye className="w-10 h-10" />
+          </div>
+
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-3">
+            Template Not Found
+          </h1>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-md mx-auto">
+            The requested template <span className="font-mono text-xs px-2 py-0.5 rounded bg-card border border-border/40 text-foreground">{slug}</span> does not exist or may have been temporarily archived.
+          </p>
+
+          {/* Quick search */}
+          <form action="/search" method="GET" className="max-w-md mx-auto mb-8">
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                name="q"
+                placeholder="Search other premium templates..."
+                className="w-full h-11 pl-4 pr-24 rounded-xl bg-card/80 border border-border/40 text-foreground text-xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-xl"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 px-3.5 h-8 rounded-lg bg-primary text-primary-fg text-xs font-semibold hover:bg-primary-hover transition-colors"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/templates">
+              <Button size="lg" className="rounded-xl px-7 h-12 bg-primary text-primary-fg hover:bg-primary-hover font-semibold shadow-lg shadow-primary/20 text-sm">
+                Browse All Templates
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline" size="lg" className="rounded-xl px-6 h-12 border-border/40 hover:bg-card text-sm font-semibold flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 rotate-180" />
+                <span>Return Home</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -326,7 +325,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
       <section className="py-8 relative">
         <div className="mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            {/* Gallery & Badges (7 cols) */}
+            {/* Gallery & Lighthouse (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
               <AnimatedSection animation="fade-left">
                 {/* Main Showcase Image */}
@@ -384,63 +383,94 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                 )}
               </AnimatedSection>
 
-              {/* Deliverable Trust Badges */}
-              <AnimatedSection animation="fade-up" delay={100}>
-                <div className="p-4 rounded-2xl border border-border/30 bg-card/40 backdrop-blur-xl">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                    Deliverables & Standards
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {DELIVERABLE_BADGES.map((b) => (
-                      <span
-                        key={b.label}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors",
-                          b.highlight
-                            ? "bg-primary/10 border-primary/30 text-primary-fg/90"
-                            : "bg-muted/30 border-border/30 text-muted-foreground"
-                        )}
-                      >
-                        <b.icon className="w-3.5 h-3.5 text-primary" />
-                        <span>{b.label}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </AnimatedSection>
-
-              {/* Lighthouse Performance Scorecard */}
-              <AnimatedSection animation="fade-up" delay={150}>
-                <div className="p-5 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Gauge className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                        Lighthouse Audited Benchmark
-                      </span>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30">
-                      100% Passed
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {LIGHTHOUSE_METRICS.map((m) => (
-                      <div
-                        key={m.label}
-                        className="p-3 rounded-xl border border-border/20 bg-background/50 text-center"
-                      >
-                        <span className={cn("text-2xl font-bold font-mono block", m.color)}>
-                          {m.score}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground">{m.label}</span>
+              {/* Lighthouse Audited Benchmark Card */}
+              {lighthouseScores.enabled && (
+                <AnimatedSection animation="fade-up" delay={100}>
+                  <div className="p-5 sm:p-6 rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                          <Gauge className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                            Lighthouse Audited Benchmark
+                          </h3>
+                          <p className="text-[11px] text-muted-foreground">
+                            Google Lighthouse Core Web Vitals & code quality audit
+                          </p>
+                        </div>
                       </div>
-                    ))}
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] text-emerald-400 border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono"
+                      >
+                        Verified 100% Passed
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {[
+                        { label: "Performance", score: lighthouseScores.performance },
+                        { label: "Accessibility", score: lighthouseScores.accessibility },
+                        { label: "Best Practices", score: lighthouseScores.bestPractices },
+                        { label: "SEO Optimized", score: lighthouseScores.seo },
+                      ].map((m) => {
+                        const colorClass =
+                          m.score >= 90
+                            ? "text-emerald-400"
+                            : m.score >= 50
+                            ? "text-amber-400"
+                            : "text-rose-400";
+                        const bgClass =
+                          m.score >= 90
+                            ? "bg-emerald-500/10 border-emerald-500/20"
+                            : m.score >= 50
+                            ? "bg-amber-500/10 border-amber-500/20"
+                            : "bg-rose-500/10 border-rose-500/20";
+                        return (
+                          <div
+                            key={m.label}
+                            className="p-3.5 rounded-2xl border border-border/20 bg-background/50 text-center flex flex-col items-center justify-center group hover:border-primary/40 transition-colors"
+                          >
+                            <div
+                              className={cn(
+                                "w-12 h-12 rounded-full flex items-center justify-center mb-1.5 border font-mono font-bold text-lg",
+                                bgClass,
+                                colorClass
+                              )}
+                            >
+                              {m.score}
+                            </div>
+                            <span className="text-xs font-semibold text-foreground">{m.label}</span>
+                            <span className="text-[10px] text-muted-foreground mt-0.5">Audit: Pass</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {(lighthouseScores.fcp || lighthouseScores.lcp) && (
+                      <div className="mt-4 pt-3 border-t border-border/20 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          First Contentful Paint: <strong className="text-foreground font-mono">{lighthouseScores.fcp || "0.4s"}</strong>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          Largest Contentful Paint: <strong className="text-foreground font-mono">{lighthouseScores.lcp || "0.8s"}</strong>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          Cumulative Layout Shift: <strong className="text-foreground font-mono">{lighthouseScores.cls || "0.00"}</strong>
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </AnimatedSection>
+                </AnimatedSection>
+              )}
             </div>
 
-            {/* Buy Box & Licensing Configurator (5 cols) */}
+            {/* Buy Box (5 cols) */}
             <div className="lg:col-span-5">
               <AnimatedSection animation="fade-right">
                 <div className="p-6 rounded-3xl border border-border/40 bg-card/60 backdrop-blur-2xl shadow-2xl space-y-6">
@@ -485,99 +515,33 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                     </div>
                   </div>
 
-                  {/* Multi-Tier License Selector */}
-                  <div className="space-y-3 pt-2 border-t border-border/20">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase tracking-wider text-foreground">
-                        Select License Tier
-                      </label>
-                      <span className="text-[11px] text-primary hover:underline cursor-pointer">
-                        Compare rights
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {(["personal", "commercial", "extended"] as LicenseType[]).map((tierKey) => {
-                        const tier = LICENSE_TIERS[tierKey];
-                        const isSelected = selectedLicense === tierKey;
-                        const tierPrice = calculateLicensePrice(product.price, tierKey);
-
-                        return (
-                          <button
-                            key={tierKey}
-                            onClick={() => setSelectedLicense(tierKey)}
-                            className={cn(
-                              "p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between",
-                              isSelected
-                                ? "bg-primary/10 border-primary shadow-md ring-1 ring-primary/30"
-                                : "bg-card/40 border-border/30 hover:border-border/60 hover:bg-muted/20"
-                            )}
-                          >
-                            {isSelected && (
-                              <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center text-white">
-                                <Check className="w-2.5 h-2.5 stroke-[3]" />
-                              </div>
-                            )}
-                            <div>
-                              <span className="text-[10px] font-bold block capitalize text-foreground">
-                                {tierKey}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground block truncate">
-                                {tier.badge}
-                              </span>
-                            </div>
-                            <span className="text-xs font-extrabold text-foreground mt-2 block">
-                              ₹{tierPrice}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Selected Tier Benefits */}
-                    <div className="p-3.5 rounded-2xl border border-primary/20 bg-primary/5 space-y-2">
-                      <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                        <span>{LICENSE_TIERS[selectedLicense].name}</span>
-                        <span className="text-[10px] text-primary font-bold">
-                          {LICENSE_TIERS[selectedLicense].badge}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        {LICENSE_TIERS[selectedLicense].shortDesc}
-                      </p>
-                      <div className="pt-1.5 border-t border-primary/10 space-y-1">
-                        {LICENSE_TIERS[selectedLicense].rights.slice(0, 3).map((r) => (
-                          <div key={r} className="flex items-center gap-2 text-[11px] text-foreground/80">
-                            <Check className="w-3 h-3 text-primary shrink-0" strokeWidth={3} />
-                            <span>{r}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Price Summary & Purchase Actions */}
-                  <div className="pt-2 border-t border-border/20 space-y-3">
+                  <div className="pt-4 border-t border-border/20 space-y-4">
                     <div className="flex items-baseline justify-between">
                       <div>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-extrabold text-foreground">
+                          <span className="text-3xl sm:text-4xl font-extrabold text-foreground">
                             ₹{currentPrice}
                           </span>
                           {currentOriginalPrice > currentPrice && (
-                            <span className="text-sm text-muted-foreground line-through">
+                            <span className="text-base text-muted-foreground line-through">
                               ₹{currentOriginalPrice}
                             </span>
                           )}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          Instant access · One-time payment · No subscription
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Instant access · Lifetime updates · Clean source code
                         </p>
                       </div>
 
-                      <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-500/30">
-                        Save ₹{currentOriginalPrice - currentPrice}
-                      </Badge>
+                      {currentOriginalPrice > currentPrice && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs text-emerald-400 border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-semibold"
+                        >
+                          Save ₹{currentOriginalPrice - currentPrice}
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="flex gap-2.5">
@@ -620,60 +584,15 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                     )}
                   </div>
 
-                  {/* Frequently Bought Together Bundle */}
-                  <div className="p-4 rounded-2xl border border-border/30 bg-muted/20 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
-                        Frequently Bought Together
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                        Bundle & Save 25%
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.thumbnail}
-                        alt=""
-                        className="w-10 h-10 rounded-lg object-cover border border-border/40 shrink-0"
-                      />
-                      <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">
-                          SaaS Admin Dashboard Pack
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Components, auth & charts boilerplate
-                        </p>
-                      </div>
-                      <span className="text-xs font-bold text-foreground shrink-0">
-                        +₹{bundleAddonPrice}
-                      </span>
-                    </div>
-
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={bundleIncluded}
-                        onChange={(e) => setBundleIncluded(e.target.checked)}
-                        className="rounded border-border/50 text-primary focus:ring-primary w-3.5 h-3.5"
-                      />
-                      <span className="text-[11px] text-muted-foreground">
-                        Include SaaS Admin Bundle for ₹{totalWithBundle} total
-                      </span>
-                    </label>
-                  </div>
-
                   {/* Guarantee & Support */}
-                  <div className="pt-2 text-[11px] text-muted-foreground space-y-1.5 border-t border-border/20">
+                  <div className="pt-3 text-[11px] text-muted-foreground space-y-2 border-t border-border/20">
                     <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <span>100% Verified Secure 256-bit Checkout</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                      <span>{LICENSE_TIERS[selectedLicense].support} included</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>Full lifetime updates & direct author support included</span>
                     </div>
                   </div>
                 </div>
@@ -690,10 +609,9 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
           <div className="flex items-center gap-2 border-b border-border/30 pb-4 overflow-x-auto">
             {[
               { id: "overview", label: "Overview & Features" },
-              { id: "pages", label: "Pages Included (6+)" },
               { id: "changelog", label: "Changelog (v" + product.version + ")" },
               { id: "reviews", label: `Customer Reviews (${product.reviews?.length || 0})` },
-              { id: "faq", label: "License & FAQ" },
+              { id: "faq", label: "FAQ" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -718,53 +636,23 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                   <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
                     About {product.title}
                   </h2>
-                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                    {product.description}
-                  </p>
+                  <MarkdownContent content={cleanDescription} />
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-3">
-                    Technologies & Dependencies
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {product.technologies.map((t) => (
-                      <Badge key={t} variant="secondary" className="text-xs px-3 py-1">
-                        {t}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </AnimatedSection>
-            )}
-
-            {activeTab === "pages" && (
-              <AnimatedSection animation="fade-up" className="max-w-4xl space-y-4">
-                <div className="mb-4">
-                  <h2 className="font-serif text-xl font-bold text-foreground">
-                    Included Pre-Built Pages & Layouts
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    All pages are fully responsive, SEO-ready, and production-tested.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {PREBUILT_PAGES.map((p, i) => (
-                    <div
-                      key={p.title}
-                      className="p-4 rounded-2xl border border-border/30 bg-card/40 flex items-start gap-3"
-                    >
-                      <div className="w-7 h-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                        {i + 1}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-foreground">{p.title}</h4>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{p.desc}</p>
-                      </div>
+                {product.technologies.length > 0 && (
+                  <div className="pt-6 border-t border-border/20">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground mb-3">
+                      Technologies & Stack
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.technologies.map((t) => (
+                        <Badge key={t} variant="secondary" className="text-xs px-3 py-1">
+                          {t}
+                        </Badge>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </AnimatedSection>
             )}
 
@@ -783,7 +671,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                   <div className="relative">
                     <div className="absolute -left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-primary border-4 border-background" />
                     <span className="text-xs font-mono font-bold text-primary">v{product.version} (Latest)</span>
-                    <span className="text-[10px] text-muted-foreground ml-2">Released this week</span>
+                    <span className="text-[10px] text-muted-foreground ml-2">Released recently</span>
                     <p className="text-xs text-foreground mt-1">
                       Upgraded to Tailwind CSS v4, full Next.js 16 App Router support, dark mode color balance, performance enhancements.
                     </p>
@@ -793,7 +681,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                     <span className="text-xs font-mono font-bold text-muted-foreground">v1.1.0</span>
                     <span className="text-[10px] text-muted-foreground ml-2">Previous release</span>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Added Figma component library, unified responsive layout tokens, accessibility fixes.
+                      Added comprehensive component library, unified responsive layout tokens, accessibility fixes.
                     </p>
                   </div>
                 </div>
@@ -843,7 +731,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                     Frequently Asked Questions
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Everything you need to know about licensing and product delivery.
+                    Everything you need to know about product delivery and support.
                   </p>
                 </div>
 

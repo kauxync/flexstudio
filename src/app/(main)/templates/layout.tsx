@@ -3,7 +3,7 @@ import { generatePageMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = generatePageMetadata({
   title: "Premium Web Templates — Next.js, React, Vue, Tailwind CSS | FlexStudio",
-  description: "Browse 500+ premium web templates, UI kits, and starter kits. Built with Next.js, React, Vue.js, Tailwind CSS, and TypeScript. Lifetime updates, commercial licenses, and fast support.",
+  description: "Browse 500+ premium web templates, UI kits, and starter kits. Built with Next.js, React, Vue.js, Tailwind CSS, and TypeScript. Lifetime updates, instant downloads, and fast support.",
   path: "/templates",
 });
 

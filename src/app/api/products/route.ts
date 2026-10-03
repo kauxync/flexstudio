@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { generateTemplateCode, isValidTemplateCode, extractStorageCode } from "@/lib/template-code";
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,7 +26,55 @@ export async function GET(req: NextRequest) {
     }
     // If status=all, don't filter by status — show everything
     if (type) where.type = type;
-    if (category) where.category = category;
+
+    if (category && category !== "all" && category !== "All") {
+      const slugMap: Record<string, string> = {
+        html: "HTML",
+        tailwind: "Tailwind",
+        react: "React",
+        nextjs: "Next.js",
+        vue: "Vue",
+        php: "PHP",
+        laravel: "Laravel",
+        shopify: "Shopify",
+        wordpress: "WordPress",
+        dashboard: "Dashboard",
+        portfolio: "Portfolio",
+        "landing-page": "Landing Page",
+        landing: "Landing Page",
+        saas: "SaaS",
+        ecommerce: "E-Commerce",
+        "e-commerce": "E-Commerce",
+        ai: "AI",
+        agency: "Agency",
+        crm: "CRM",
+        education: "Education",
+        mobile: "Mobile App",
+      };
+
+      const mappedName = slugMap[category.toLowerCase()] || category;
+      const terms = Array.from(
+        new Set([
+          category,
+          mappedName,
+          category.toLowerCase(),
+          category.toUpperCase(),
+          category.charAt(0).toUpperCase() + category.slice(1),
+        ])
+      ).filter(Boolean);
+
+      const categoryCondition = {
+        OR: [
+          { category: { equals: mappedName, mode: "insensitive" } },
+          { category: { equals: category, mode: "insensitive" } },
+          { category: { contains: category, mode: "insensitive" } },
+          { technologies: { hasSome: terms } },
+        ],
+      };
+
+      if (!where.AND) where.AND = [];
+      where.AND.push(categoryCondition);
+    }
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
@@ -81,10 +130,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
     }
 
+    // Ensure unique and permanent 8-character storage code for this product
+    let storageCode = (data.storageCode && isValidTemplateCode(data.storageCode))
+      ? data.storageCode.toUpperCase()
+      : extractStorageCode(data.thumbnail) || extractStorageCode(data.zipUrl) || generateTemplateCode();
+
+    // Verify uniqueness in database
+    let isUnique = false;
+    while (!isUnique) {
+      const existingCode = await prisma.product.findFirst({ where: { storageCode } });
+      if (!existingCode) {
+        isUnique = true;
+      } else {
+        storageCode = generateTemplateCode();
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
         title: data.title,
         slug: data.slug,
+        storageCode,
         description: data.description || "",
         shortDesc: data.shortDesc || data.title,
         price: parseFloat(data.price),

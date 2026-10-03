@@ -6,7 +6,7 @@ import { generatePageMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 export const metadata: Metadata = generatePageMetadata({
   title: "Terms of Service | FlexStudio",
   description:
-    "FlexStudio terms of service governing digital purchases, template licensing, user obligations, and intellectual property.",
+    "FlexStudio terms of service governing digital purchases, user obligations, and intellectual property.",
   path: "/terms",
 });
 
@@ -53,10 +53,10 @@ export default function TermsPage() {
 
             <div>
               <h2 className="font-serif text-base sm:text-lg font-bold text-foreground mb-2">
-                2. Digital Goods License & Ownership
+                2. Digital Goods & Ownership
               </h2>
               <p>
-                All web templates, source code packages, UI components, and Figma files available on FlexStudio remain the intellectual property of FlexStudio and its respective authors. When you purchase an item, you are granted a non-exclusive, non-transferable license based on the specific tier purchased (Personal, Commercial, or Extended).
+                All web templates, source code packages, UI components, and Figma files available on FlexStudio remain the intellectual property of FlexStudio and its respective authors. When you purchase an item, you are granted a non-exclusive, non-transferable right to use it in your own projects and client work.
               </p>
             </div>
 
@@ -65,7 +65,7 @@ export default function TermsPage() {
                 3. Prohibition on Resale & Redistribution
               </h2>
               <p>
-                You may not sub-license, resell, lease, donate, or distribute the raw template or source code as a standalone stock item or theme, whether modified or unmodified. You may only distribute the codebase when compiled into a distinct final client product or SaaS application.
+                You may not resell, lease, donate, or distribute the raw template or source code as a standalone stock item or theme, whether modified or unmodified. You may only distribute the codebase when compiled into a distinct final client product or SaaS application.
               </p>
             </div>
 
@@ -74,7 +74,7 @@ export default function TermsPage() {
                 4. Payments and Deliveries
               </h2>
               <p>
-                Prices are displayed in Indian Rupees (INR) or localized currencies. Delivery of products is digital and instantaneous upon transaction clearance. You will immediately receive access to download archives and unique cryptographic license keys in your dashboard.
+                Prices are displayed in Indian Rupees (INR) or localized currencies. Delivery of products is digital and instantaneous upon transaction clearance. You will immediately receive access to your download archives in your dashboard.
               </p>
             </div>
 

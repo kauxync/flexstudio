@@ -39,8 +39,6 @@ export type OrderItemMinAggregateOutputType = {
   orderId: string | null
   productId: string | null
   price: number | null
-  license: string | null
-  licenseKey: string | null
 }
 
 export type OrderItemMaxAggregateOutputType = {
@@ -48,8 +46,6 @@ export type OrderItemMaxAggregateOutputType = {
   orderId: string | null
   productId: string | null
   price: number | null
-  license: string | null
-  licenseKey: string | null
 }
 
 export type OrderItemCountAggregateOutputType = {
@@ -57,8 +53,6 @@ export type OrderItemCountAggregateOutputType = {
   orderId: number
   productId: number
   price: number
-  license: number
-  licenseKey: number
   _all: number
 }
 
@@ -76,8 +70,6 @@ export type OrderItemMinAggregateInputType = {
   orderId?: true
   productId?: true
   price?: true
-  license?: true
-  licenseKey?: true
 }
 
 export type OrderItemMaxAggregateInputType = {
@@ -85,8 +77,6 @@ export type OrderItemMaxAggregateInputType = {
   orderId?: true
   productId?: true
   price?: true
-  license?: true
-  licenseKey?: true
 }
 
 export type OrderItemCountAggregateInputType = {
@@ -94,8 +84,6 @@ export type OrderItemCountAggregateInputType = {
   orderId?: true
   productId?: true
   price?: true
-  license?: true
-  licenseKey?: true
   _all?: true
 }
 
@@ -190,8 +178,6 @@ export type OrderItemGroupByOutputType = {
   orderId: string
   productId: string
   price: number
-  license: string
-  licenseKey: string | null
   _count: OrderItemCountAggregateOutputType | null
   _avg: OrderItemAvgAggregateOutputType | null
   _sum: OrderItemSumAggregateOutputType | null
@@ -222,8 +208,6 @@ export type OrderItemWhereInput = {
   orderId?: Prisma.StringFilter<"OrderItem"> | string
   productId?: Prisma.StringFilter<"OrderItem"> | string
   price?: Prisma.FloatFilter<"OrderItem"> | number
-  license?: Prisma.StringFilter<"OrderItem"> | string
-  licenseKey?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
 }
@@ -233,8 +217,6 @@ export type OrderItemOrderByWithRelationInput = {
   orderId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
   price?: Prisma.SortOrder
-  license?: Prisma.SortOrder
-  licenseKey?: Prisma.SortOrderInput | Prisma.SortOrder
   order?: Prisma.OrderOrderByWithRelationInput
   product?: Prisma.ProductOrderByWithRelationInput
 }
@@ -247,8 +229,6 @@ export type OrderItemWhereUniqueInput = Prisma.AtLeast<{
   orderId?: Prisma.StringFilter<"OrderItem"> | string
   productId?: Prisma.StringFilter<"OrderItem"> | string
   price?: Prisma.FloatFilter<"OrderItem"> | number
-  license?: Prisma.StringFilter<"OrderItem"> | string
-  licenseKey?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
 }, "id">
@@ -258,8 +238,6 @@ export type OrderItemOrderByWithAggregationInput = {
   orderId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
   price?: Prisma.SortOrder
-  license?: Prisma.SortOrder
-  licenseKey?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.OrderItemCountOrderByAggregateInput
   _avg?: Prisma.OrderItemAvgOrderByAggregateInput
   _max?: Prisma.OrderItemMaxOrderByAggregateInput
@@ -275,15 +253,11 @@ export type OrderItemScalarWhereWithAggregatesInput = {
   orderId?: Prisma.StringWithAggregatesFilter<"OrderItem"> | string
   productId?: Prisma.StringWithAggregatesFilter<"OrderItem"> | string
   price?: Prisma.FloatWithAggregatesFilter<"OrderItem"> | number
-  license?: Prisma.StringWithAggregatesFilter<"OrderItem"> | string
-  licenseKey?: Prisma.StringNullableWithAggregatesFilter<"OrderItem"> | string | null
 }
 
 export type OrderItemCreateInput = {
   id?: string
   price: number
-  license?: string
-  licenseKey?: string | null
   order: Prisma.OrderCreateNestedOneWithoutItemsInput
   product: Prisma.ProductCreateNestedOneWithoutOrderItemsInput
 }
@@ -293,15 +267,11 @@ export type OrderItemUncheckedCreateInput = {
   orderId: string
   productId: string
   price: number
-  license?: string
-  licenseKey?: string | null
 }
 
 export type OrderItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.OrderUpdateOneRequiredWithoutItemsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutOrderItemsNestedInput
 }
@@ -311,8 +281,6 @@ export type OrderItemUncheckedUpdateInput = {
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OrderItemCreateManyInput = {
@@ -320,15 +288,11 @@ export type OrderItemCreateManyInput = {
   orderId: string
   productId: string
   price: number
-  license?: string
-  licenseKey?: string | null
 }
 
 export type OrderItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OrderItemUncheckedUpdateManyInput = {
@@ -336,8 +300,6 @@ export type OrderItemUncheckedUpdateManyInput = {
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OrderItemListRelationFilter = {
@@ -355,8 +317,6 @@ export type OrderItemCountOrderByAggregateInput = {
   orderId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
   price?: Prisma.SortOrder
-  license?: Prisma.SortOrder
-  licenseKey?: Prisma.SortOrder
 }
 
 export type OrderItemAvgOrderByAggregateInput = {
@@ -368,8 +328,6 @@ export type OrderItemMaxOrderByAggregateInput = {
   orderId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
   price?: Prisma.SortOrder
-  license?: Prisma.SortOrder
-  licenseKey?: Prisma.SortOrder
 }
 
 export type OrderItemMinOrderByAggregateInput = {
@@ -377,8 +335,6 @@ export type OrderItemMinOrderByAggregateInput = {
   orderId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
   price?: Prisma.SortOrder
-  license?: Prisma.SortOrder
-  licenseKey?: Prisma.SortOrder
 }
 
 export type OrderItemSumOrderByAggregateInput = {
@@ -472,8 +428,6 @@ export type OrderItemUncheckedUpdateManyWithoutOrderNestedInput = {
 export type OrderItemCreateWithoutProductInput = {
   id?: string
   price: number
-  license?: string
-  licenseKey?: string | null
   order: Prisma.OrderCreateNestedOneWithoutItemsInput
 }
 
@@ -481,8 +435,6 @@ export type OrderItemUncheckedCreateWithoutProductInput = {
   id?: string
   orderId: string
   price: number
-  license?: string
-  licenseKey?: string | null
 }
 
 export type OrderItemCreateOrConnectWithoutProductInput = {
@@ -519,15 +471,11 @@ export type OrderItemScalarWhereInput = {
   orderId?: Prisma.StringFilter<"OrderItem"> | string
   productId?: Prisma.StringFilter<"OrderItem"> | string
   price?: Prisma.FloatFilter<"OrderItem"> | number
-  license?: Prisma.StringFilter<"OrderItem"> | string
-  licenseKey?: Prisma.StringNullableFilter<"OrderItem"> | string | null
 }
 
 export type OrderItemCreateWithoutOrderInput = {
   id?: string
   price: number
-  license?: string
-  licenseKey?: string | null
   product: Prisma.ProductCreateNestedOneWithoutOrderItemsInput
 }
 
@@ -535,8 +483,6 @@ export type OrderItemUncheckedCreateWithoutOrderInput = {
   id?: string
   productId: string
   price: number
-  license?: string
-  licenseKey?: string | null
 }
 
 export type OrderItemCreateOrConnectWithoutOrderInput = {
@@ -569,15 +515,11 @@ export type OrderItemCreateManyProductInput = {
   id?: string
   orderId: string
   price: number
-  license?: string
-  licenseKey?: string | null
 }
 
 export type OrderItemUpdateWithoutProductInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.OrderUpdateOneRequiredWithoutItemsNestedInput
 }
 
@@ -585,31 +527,23 @@ export type OrderItemUncheckedUpdateWithoutProductInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OrderItemUncheckedUpdateManyWithoutProductInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OrderItemCreateManyOrderInput = {
   id?: string
   productId: string
   price: number
-  license?: string
-  licenseKey?: string | null
 }
 
 export type OrderItemUpdateWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product?: Prisma.ProductUpdateOneRequiredWithoutOrderItemsNestedInput
 }
 
@@ -617,16 +551,12 @@ export type OrderItemUncheckedUpdateWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OrderItemUncheckedUpdateManyWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.StringFieldUpdateOperationsInput | string
   price?: Prisma.FloatFieldUpdateOperationsInput | number
-  license?: Prisma.StringFieldUpdateOperationsInput | string
-  licenseKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -636,8 +566,6 @@ export type OrderItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   orderId?: boolean
   productId?: boolean
   price?: boolean
-  license?: boolean
-  licenseKey?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["orderItem"]>
@@ -647,8 +575,6 @@ export type OrderItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   orderId?: boolean
   productId?: boolean
   price?: boolean
-  license?: boolean
-  licenseKey?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["orderItem"]>
@@ -658,8 +584,6 @@ export type OrderItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   orderId?: boolean
   productId?: boolean
   price?: boolean
-  license?: boolean
-  licenseKey?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["orderItem"]>
@@ -669,11 +593,9 @@ export type OrderItemSelectScalar = {
   orderId?: boolean
   productId?: boolean
   price?: boolean
-  license?: boolean
-  licenseKey?: boolean
 }
 
-export type OrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "productId" | "price" | "license" | "licenseKey", ExtArgs["result"]["orderItem"]>
+export type OrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "productId" | "price", ExtArgs["result"]["orderItem"]>
 export type OrderItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
@@ -698,8 +620,6 @@ export type $OrderItemPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     orderId: string
     productId: string
     price: number
-    license: string
-    licenseKey: string | null
   }, ExtArgs["result"]["orderItem"]>
   composites: {}
 }
@@ -1129,8 +1049,6 @@ export interface OrderItemFieldRefs {
   readonly orderId: Prisma.FieldRef<"OrderItem", 'String'>
   readonly productId: Prisma.FieldRef<"OrderItem", 'String'>
   readonly price: Prisma.FieldRef<"OrderItem", 'Float'>
-  readonly license: Prisma.FieldRef<"OrderItem", 'String'>
-  readonly licenseKey: Prisma.FieldRef<"OrderItem", 'String'>
 }
     
 

@@ -9,11 +9,6 @@ import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { cn } from "@/lib/utils";
 import {
-  LICENSE_TIERS,
-  LicenseType,
-  calculateLicensePrice,
-} from "@/lib/licensing";
-import {
   Star,
   Download,
   Check,
@@ -73,7 +68,6 @@ export default function SourceCodeDetailPage({ params }: { params: Promise<{ slu
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedLicense, setSelectedLicense] = useState<LicenseType>("personal");
   const [activeTab, setActiveTab] = useState<"overview" | "architecture" | "faq">("overview");
 
   const [addingToCart, setAddingToCart] = useState(false);
@@ -113,15 +107,15 @@ export default function SourceCodeDetailPage({ params }: { params: Promise<{ slu
     setTimeout(() => setToast(null), 3000);
   };
 
-  const currentPrice = product ? calculateLicensePrice(product.price, selectedLicense) : 0;
+  const currentPrice = product ? product.price : 0;
   const currentOriginalPrice = product?.originalPrice
-    ? calculateLicensePrice(product.originalPrice, selectedLicense)
+    ? product.originalPrice
     : Math.round(currentPrice * 1.35);
 
   const handleAddToCart = async () => {
     if (!product) return;
     if (!session) {
-      router.push(`/checkout?productId=${product.id}&license=${selectedLicense}`);
+      router.push(`/checkout?productId=${product.id}`);
       return;
     }
 
@@ -130,11 +124,11 @@ export default function SourceCodeDetailPage({ params }: { params: Promise<{ slu
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, license: selectedLicense }),
+        body: JSON.stringify({ productId: product.id }),
       });
       if (res.ok) {
         setIsInCart(true);
-        showToast(`Added to cart with ${LICENSE_TIERS[selectedLicense].name}`);
+        showToast("Added to cart!");
         window.dispatchEvent(new Event("cart-updated"));
       }
     } catch {
@@ -145,7 +139,7 @@ export default function SourceCodeDetailPage({ params }: { params: Promise<{ slu
 
   const handleBuyNow = () => {
     if (!product) return;
-    router.push(`/checkout?productId=${product.id}&license=${selectedLicense}&price=${currentPrice}`);
+    router.push(`/checkout?productId=${product.id}&price=${currentPrice}`);
   };
 
   if (loading) {
@@ -276,55 +270,6 @@ export default function SourceCodeDetailPage({ params }: { params: Promise<{ slu
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {product.shortDesc}
                     </p>
-                  </div>
-
-                  {/* License Tier Selector */}
-                  <div className="space-y-3 pt-2 border-t border-border/20">
-                    <label className="text-xs font-bold uppercase tracking-wider text-foreground block">
-                      Select Developer License
-                    </label>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {(["personal", "commercial", "extended"] as LicenseType[]).map((tierKey) => {
-                        const tier = LICENSE_TIERS[tierKey];
-                        const isSelected = selectedLicense === tierKey;
-                        const tierPrice = calculateLicensePrice(product.price, tierKey);
-
-                        return (
-                          <button
-                            key={tierKey}
-                            onClick={() => setSelectedLicense(tierKey)}
-                            className={cn(
-                              "p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between",
-                              isSelected
-                                ? "bg-primary/10 border-primary shadow-md ring-1 ring-primary/30"
-                                : "bg-card/40 border-border/30 hover:border-border/60 hover:bg-muted/20"
-                            )}
-                          >
-                            <div>
-                              <span className="text-[10px] font-bold block capitalize text-foreground">
-                                {tierKey}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground block truncate">
-                                {tier.badge}
-                              </span>
-                            </div>
-                            <span className="text-xs font-extrabold text-foreground mt-2 block">
-                              ₹{tierPrice}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl border border-primary/20 bg-primary/5 space-y-1.5 text-xs">
-                      <span className="font-semibold text-foreground block">
-                        {LICENSE_TIERS[selectedLicense].name}
-                      </span>
-                      <p className="text-[11px] text-muted-foreground">
-                        {LICENSE_TIERS[selectedLicense].shortDesc}
-                      </p>
-                    </div>
                   </div>
 
                   {/* Price & Buy Now */}

@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { Newsletter } from "@/components/sections/newsletter";
 import { cn } from "@/lib/utils";
-import { Clock, Star, Download, Search, SlidersHorizontal, X, Layout, Grid3X3, List, ChevronDown, ChevronUp, Eye, ShoppingCart, Check } from "lucide-react";
+import { Clock, Star, Download, Search, SlidersHorizontal, X, Layout, Grid3X3, List, ChevronDown, ChevronUp, Eye, ShoppingCart, Check, Filter } from "lucide-react";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -28,8 +28,56 @@ const ratingOptions = [
   { label: "4.8 & up", value: 4.8 },
 ];
 
-const templateCategories = ["All", "Dashboard", "Landing Page", "Portfolio", "E-Commerce", "Blog", "Business", "UI Kit", "Starter", "SaaS", "Mobile"];
-const templateTechnologies = ["Next.js", "React", "Vue", "Tailwind", "TypeScript", "Framer Motion", "Prisma", "Stripe"];
+const categorySlugMap: Record<string, string> = {
+  html: "HTML",
+  tailwind: "Tailwind",
+  react: "React",
+  nextjs: "Next.js",
+  vue: "Vue",
+  php: "PHP",
+  laravel: "Laravel",
+  shopify: "Shopify",
+  wordpress: "WordPress",
+  dashboard: "Dashboard",
+  portfolio: "Portfolio",
+  "landing-page": "Landing Page",
+  landing: "Landing Page",
+  saas: "SaaS",
+  ecommerce: "E-Commerce",
+  "e-commerce": "E-Commerce",
+  ai: "AI",
+  agency: "Agency",
+  crm: "CRM",
+  education: "Education",
+  mobile: "Mobile App",
+  "mobile-app": "Mobile App",
+  "ui-kit": "UI Kit",
+  starter: "Starter",
+};
+
+const templateCategories = [
+  "All",
+  "HTML",
+  "Tailwind",
+  "React",
+  "Next.js",
+  "Dashboard",
+  "Landing Page",
+  "Portfolio",
+  "E-Commerce",
+  "SaaS",
+  "Vue",
+  "PHP",
+  "Laravel",
+  "WordPress",
+  "Shopify",
+  "AI",
+  "Agency",
+  "CRM",
+  "Education",
+  "Mobile App",
+];
+const templateTechnologies = ["Next.js", "React", "Vue", "Tailwind", "TypeScript", "HTML", "Framer Motion", "Prisma", "Stripe"];
 
 interface Template {
   id: string;
@@ -73,7 +121,7 @@ function TemplateCard({ template, view }: { template: Template; view: "grid" | "
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: template.id, license: "commercial" }),
+        body: JSON.stringify({ productId: template.id }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok || data.error === "Already in cart") {
@@ -229,11 +277,24 @@ function TemplateCard({ template, view }: { template: Template; view: "grid" | "
   );
 }
 
-export default function TemplatesPage() {
+function TemplatesPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const getMappedCategory = (slugOrName: string | null) => {
+    if (!slugOrName || slugOrName.toLowerCase() === "all") return "All";
+    const lower = slugOrName.toLowerCase().trim();
+    if (categorySlugMap[lower]) return categorySlugMap[lower];
+    const found = templateCategories.find((c) => c.toLowerCase() === lower);
+    if (found) return found;
+    return slugOrName.charAt(0).toUpperCase() + slugOrName.slice(1);
+  };
+
+  const initialCat = getMappedCategory(searchParams.get("category"));
+  const [activeCategory, setActiveCategory] = useState(initialCat);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || searchParams.get("search") || "");
   const [sortBy, setSortBy] = useState<"popular" | "newest" | "price-low" | "price-high" | "rating">("popular");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
@@ -244,15 +305,40 @@ export default function TemplatesPage() {
   const [showBestsellerOnly, setShowBestsellerOnly] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
+  // Sync category when URL query parameter changes
+  useEffect(() => {
+    const cat = getMappedCategory(searchParams.get("category"));
+    setActiveCategory(cat);
+    const q = searchParams.get("q") || searchParams.get("search");
+    if (q !== null && q !== undefined) setSearchQuery(q);
+  }, [searchParams]);
+
   useEffect(() => {
     fetch("/api/products?type=template")
       .then((res) => res.json())
-      .then((data) => { setTemplates(data.products || []); setLoading(false); })
+      .then((data) => {
+        setTemplates(data.products || []);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
+  const handleCategorySelect = (cat: string) => {
+    setActiveCategory(cat);
+    setVisibleCount(ITEMS_PER_PAGE);
+    if (cat === "All") {
+      router.push("/templates", { scroll: false });
+    } else {
+      const slugEntry = Object.entries(categorySlugMap).find(
+        ([_, name]) => name.toLowerCase() === cat.toLowerCase()
+      );
+      const slug = slugEntry ? slugEntry[0] : cat.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      router.push(`/templates?category=${slug}`, { scroll: false });
+    }
+  };
+
   const toggleTech = (tech: string) => {
-    setSelectedTech((prev) => prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]);
+    setSelectedTech((prev) => (prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]));
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
@@ -265,33 +351,117 @@ export default function TemplatesPage() {
     setShowNewOnly(false);
     setShowBestsellerOnly(false);
     setVisibleCount(ITEMS_PER_PAGE);
+    router.push("/templates", { scroll: false });
   };
 
-  const hasActiveFilters = activeCategory !== "All" || selectedTech.length > 0 || priceRange[0] > 0 || priceRange[1] < 10000 || minRating > 0 || showNewOnly || showBestsellerOnly;
+  const hasActiveFilters =
+    activeCategory !== "All" ||
+    selectedTech.length > 0 ||
+    priceRange[0] > 0 ||
+    priceRange[1] < 10000 ||
+    minRating > 0 ||
+    showNewOnly ||
+    showBestsellerOnly ||
+    searchQuery !== "";
 
   const filteredTemplates = useMemo(() => {
     return templates
       .filter((t) => {
-        const matchesCategory = activeCategory === "All" || t.category === activeCategory;
-        const matchesSearch = searchQuery === "" || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.shortDesc.toLowerCase().includes(searchQuery.toLowerCase()) || t.technologies.some((tech) => tech.toLowerCase().includes(searchQuery.toLowerCase()));
-        const matchesTech = selectedTech.length === 0 || selectedTech.some((tech) => t.technologies.includes(tech));
+        const matchesCategory =
+          activeCategory === "All" ||
+          (() => {
+            const normActive = activeCategory.toLowerCase().replace(/[^a-z0-9]/g, "");
+            const normCat = (t.category || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+            // 1. Direct category name match
+            if (
+              normCat === normActive ||
+              normCat.includes(normActive) ||
+              normActive.includes(normCat)
+            ) {
+              return true;
+            }
+
+            // 2. Technology match (e.g. template uses HTML or React)
+            if (
+              Array.isArray(t.technologies) &&
+              t.technologies.some((tech) => {
+                const normTech = tech.toLowerCase().replace(/[^a-z0-9]/g, "");
+                return (
+                  normTech === normActive ||
+                  normTech.includes(normActive) ||
+                  normActive.includes(normTech)
+                );
+              })
+            ) {
+              return true;
+            }
+
+            // 3. Keyword in title or short summary
+            const titleDesc = `${t.title || ""} ${t.shortDesc || ""}`
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "");
+            if (titleDesc.includes(normActive)) {
+              return true;
+            }
+
+            return false;
+          })();
+
+        const matchesSearch =
+          searchQuery === "" ||
+          t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.shortDesc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (Array.isArray(t.technologies) &&
+            t.technologies.some((tech) => tech.toLowerCase().includes(searchQuery.toLowerCase())));
+
+        const matchesTech =
+          selectedTech.length === 0 ||
+          (Array.isArray(t.technologies) &&
+            selectedTech.some((tech) => t.technologies.includes(tech)));
+
         const matchesPrice = t.price >= priceRange[0] && t.price <= priceRange[1];
         const matchesRating = t.rating >= minRating;
         const matchesNew = !showNewOnly || t.isNew;
         const matchesBestseller = !showBestsellerOnly || t.isBestseller;
-        return matchesCategory && matchesSearch && matchesTech && matchesPrice && matchesRating && matchesNew && matchesBestseller;
+
+        return (
+          matchesCategory &&
+          matchesSearch &&
+          matchesTech &&
+          matchesPrice &&
+          matchesRating &&
+          matchesNew &&
+          matchesBestseller
+        );
       })
       .sort((a, b) => {
         switch (sortBy) {
-          case "popular": return b.downloadCount - a.downloadCount;
-          case "newest": return new Date(b.id).getTime() - new Date(a.id).getTime();
-          case "price-low": return a.price - b.price;
-          case "price-high": return b.price - a.price;
-          case "rating": return b.rating - a.rating;
-          default: return 0;
+          case "popular":
+            return b.downloadCount - a.downloadCount;
+          case "newest":
+            return new Date(b.id).getTime() - new Date(a.id).getTime();
+          case "price-low":
+            return a.price - b.price;
+          case "price-high":
+            return b.price - a.price;
+          case "rating":
+            return b.rating - a.rating;
+          default:
+            return 0;
         }
       });
-  }, [templates, activeCategory, searchQuery, sortBy, selectedTech, priceRange, minRating, showNewOnly, showBestsellerOnly]);
+  }, [
+    templates,
+    activeCategory,
+    searchQuery,
+    sortBy,
+    selectedTech,
+    priceRange,
+    minRating,
+    showNewOnly,
+    showBestsellerOnly,
+  ]);
 
   const visibleTemplates = filteredTemplates.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTemplates.length;
@@ -302,14 +472,30 @@ export default function TemplatesPage() {
         <div className="absolute inset-0 gradient-mesh opacity-20" />
         <div className="relative mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
           <AnimatedSection animation="fade-up" className="text-center mb-8">
-            <Badge variant="outline" className="mb-5 px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase border-gold/20 bg-gold/5 text-gold rounded-full">Templates</Badge>
+            <Badge
+              variant="outline"
+              className="mb-5 px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase border-gold/20 bg-gold/5 text-gold rounded-full"
+            >
+              Templates
+            </Badge>
             <h1 className="font-display text-4xl sm:text-5xl font-bold mb-3">Premium Templates</h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">Beautifully crafted templates to launch your next project faster</p>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Beautifully crafted templates to launch your next project faster
+            </p>
           </AnimatedSection>
           <AnimatedSection animation="fade-up" delay={100}>
             <div className="max-w-2xl mx-auto relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-              <input type="text" placeholder="Search templates, technologies..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }} className="w-full h-12 pl-11 pr-4 text-sm bg-background border border-border/40 rounded-xl text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/30 transition-all duration-300" />
+              <input
+                type="text"
+                placeholder="Search templates, technologies..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setVisibleCount(ITEMS_PER_PAGE);
+                }}
+                className="w-full h-12 pl-11 pr-4 text-sm bg-background border border-border/40 rounded-xl text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/30 transition-all duration-300"
+              />
             </div>
           </AnimatedSection>
         </div>
@@ -317,17 +503,55 @@ export default function TemplatesPage() {
 
       <section className="py-8 relative">
         <div className="mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
+          {/* Horizontal Quick Category Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 no-scrollbar">
+            {templateCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleCategorySelect(cat)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition-all border shrink-0 font-medium",
+                  activeCategory === cat
+                    ? "bg-gold text-[#1a1a1a] border-gold font-bold shadow-sm"
+                    : "bg-card/40 hover:bg-card text-muted-foreground hover:text-foreground border-border/40 hover:border-gold/30"
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <div className="flex gap-8">
+            {/* Sidebar Desktop */}
             <aside className="hidden lg:block w-64 shrink-0">
               <div className="sticky top-24 p-5 rounded-2xl border border-border/30 bg-card/20">
                 <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2"><SlidersHorizontal className="w-4 h-4" /><span className="text-sm font-semibold">Filters</span></div>
-                  {hasActiveFilters && <button onClick={clearFilters} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Clear all</button>}
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="text-sm font-semibold">Filters</span>
+                  </div>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
                 </div>
                 <SidebarSection title="Category">
-                  <div className="space-y-1">
+                  <div className="space-y-1 max-h-72 overflow-y-auto pr-1 no-scrollbar">
                     {templateCategories.map((cat) => (
-                      <button key={cat} onClick={() => { setActiveCategory(cat); setVisibleCount(ITEMS_PER_PAGE); }} className={cn("w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-all duration-200", activeCategory === cat ? "bg-primary text-primary-fg font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                      <button
+                        key={cat}
+                        onClick={() => handleCategorySelect(cat)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                          activeCategory === cat
+                            ? "bg-primary text-primary-fg font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
                         <span>{cat}</span>
                       </button>
                     ))}
@@ -336,39 +560,145 @@ export default function TemplatesPage() {
                 <SidebarSection title="Technology">
                   <div className="flex flex-wrap gap-1.5">
                     {templateTechnologies.map((tech) => (
-                      <button key={tech} onClick={() => toggleTech(tech)} className={cn("px-2.5 py-1.5 text-[11px] font-medium rounded-lg transition-all duration-200", selectedTech.includes(tech) ? "bg-primary text-primary-fg" : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/30")}>{tech}</button>
+                      <button
+                        key={tech}
+                        onClick={() => toggleTech(tech)}
+                        className={cn(
+                          "px-2.5 py-1.5 text-[11px] font-medium rounded-lg transition-all duration-200",
+                          selectedTech.includes(tech)
+                            ? "bg-primary text-primary-fg"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/30"
+                        )}
+                      >
+                        {tech}
+                      </button>
                     ))}
                   </div>
                 </SidebarSection>
                 <SidebarSection title="Price">
                   <div className="space-y-1">
                     {priceRanges.map((range) => (
-                      <button key={range.label} onClick={() => { setPriceRange([range.min, range.max]); setVisibleCount(ITEMS_PER_PAGE); }} className={cn("w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200", priceRange[0] === range.min && priceRange[1] === range.max ? "bg-primary text-primary-fg font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>{range.label}</button>
+                      <button
+                        key={range.label}
+                        onClick={() => {
+                          setPriceRange([range.min, range.max]);
+                          setVisibleCount(ITEMS_PER_PAGE);
+                        }}
+                        className={cn(
+                          "w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                          priceRange[0] === range.min && priceRange[1] === range.max
+                            ? "bg-primary text-primary-fg font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        {range.label}
+                      </button>
                     ))}
                   </div>
                 </SidebarSection>
                 <SidebarSection title="Rating">
                   <div className="space-y-1">
                     {ratingOptions.map((opt) => (
-                      <button key={opt.value} onClick={() => { setMinRating(opt.value); setVisibleCount(ITEMS_PER_PAGE); }} className={cn("w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200", minRating === opt.value ? "bg-primary text-primary-fg font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
-                        {opt.value > 0 && <Star className="w-3 h-3 text-gold fill-gold" />}<span>{opt.label}</span>
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setMinRating(opt.value);
+                          setVisibleCount(ITEMS_PER_PAGE);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                          minRating === opt.value
+                            ? "bg-primary text-primary-fg font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        {opt.value > 0 && <Star className="w-3 h-3 text-gold fill-gold" />}
+                        <span>{opt.label}</span>
                       </button>
                     ))}
                   </div>
                 </SidebarSection>
                 <SidebarSection title="Quick Filters">
                   <div className="space-y-2">
-                    <button onClick={() => { setShowNewOnly(!showNewOnly); setVisibleCount(ITEMS_PER_PAGE); }} className={cn("w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200", showNewOnly ? "bg-emerald-500 text-white font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/30")}><span className={cn("w-2 h-2 rounded-full", showNewOnly ? "bg-white" : "bg-emerald-500")} />New Arrivals</button>
-                    <button onClick={() => { setShowBestsellerOnly(!showBestsellerOnly); setVisibleCount(ITEMS_PER_PAGE); }} className={cn("w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200", showBestsellerOnly ? "bg-gold text-[#1a1a1a] font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/30")}><span className={cn("w-2 h-2 rounded-full", showBestsellerOnly ? "bg-[#1a1a1a]" : "bg-gold")} />Bestsellers</button>
+                    <button
+                      onClick={() => {
+                        setShowNewOnly(!showNewOnly);
+                        setVisibleCount(ITEMS_PER_PAGE);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                        showNewOnly
+                          ? "bg-emerald-500 text-white font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/30"
+                      )}
+                    >
+                      <span className={cn("w-2 h-2 rounded-full", showNewOnly ? "bg-white" : "bg-emerald-500")} />
+                      New Arrivals
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowBestsellerOnly(!showBestsellerOnly);
+                        setVisibleCount(ITEMS_PER_PAGE);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                        showBestsellerOnly
+                          ? "bg-gold text-[#1a1a1a] font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/30"
+                      )}
+                    >
+                      <span className={cn("w-2 h-2 rounded-full", showBestsellerOnly ? "bg-[#1a1a1a]" : "bg-gold")} />
+                      Bestsellers
+                    </button>
                   </div>
                 </SidebarSection>
               </div>
             </aside>
+
+            {/* Main Content */}
             <div className="flex-1 min-w-0">
+              {/* Active Filter Notice if activeCategory !== All */}
+              {activeCategory !== "All" && (
+                <div className="mb-4 p-3.5 rounded-2xl border border-gold/30 bg-gold/5 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Category filter:</span>
+                    <span className="font-bold text-foreground bg-gold/20 text-gold px-2 py-0.5 rounded-lg border border-gold/30">
+                      {activeCategory}
+                    </span>
+                    <span className="text-muted-foreground">
+                      ({filteredTemplates.length} result{filteredTemplates.length === 1 ? "" : "s"})
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleCategorySelect("All")}
+                    className="px-2 py-1 rounded-lg border border-border/40 bg-card hover:bg-muted text-muted-foreground hover:text-foreground text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                    <span>Clear Filter</span>
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-6">
-                <div className="text-sm text-muted-foreground"><span className="font-medium text-foreground">{filteredTemplates.length}</span> templates</div>
                 <div className="flex items-center gap-3">
-                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="h-8 px-3 text-xs bg-background border border-border/40 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/20 cursor-pointer">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/40 bg-card text-xs font-semibold text-foreground"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    <span>Filters</span>
+                  </button>
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{filteredTemplates.length}</span> templates
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="h-8 px-3 text-xs bg-background border border-border/40 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/20 cursor-pointer"
+                  >
                     <option value="popular">Most Popular</option>
                     <option value="newest">Newest</option>
                     <option value="price-low">Price: Low to High</option>
@@ -376,28 +706,131 @@ export default function TemplatesPage() {
                     <option value="rating">Highest Rated</option>
                   </select>
                   <div className="hidden sm:flex items-center gap-1 h-8 px-1.5 rounded-lg border border-border/40 bg-background">
-                    <button onClick={() => setView("grid")} className={cn("flex h-6 w-6 items-center justify-center rounded-md transition-colors", view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}><Grid3X3 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => setView("list")} className={cn("flex h-6 w-6 items-center justify-center rounded-md transition-colors", view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}><List className="w-3.5 h-3.5" /></button>
+                    <button
+                      onClick={() => setView("grid")}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+                        view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Grid3X3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setView("list")}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+                        view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <List className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
+
+              {/* Mobile Filter Drawer / Collapse */}
+              {showFilters && (
+                <div className="lg:hidden mb-6 p-4 rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl space-y-4 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-border/30">
+                    <span className="font-bold text-foreground">Mobile Filters</span>
+                    <button onClick={() => setShowFilters(false)} className="text-muted-foreground">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div>
+                    <span className="font-semibold block mb-2">Category</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {templateCategories.map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => {
+                            handleCategorySelect(cat);
+                            setShowFilters(false);
+                          }}
+                          className={cn(
+                            "px-2.5 py-1 rounded-lg border text-xs",
+                            activeCategory === cat
+                              ? "bg-gold text-[#1a1a1a] border-gold font-bold"
+                              : "border-border/40 bg-background/60 text-muted-foreground"
+                          )}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="font-semibold block mb-2">Technology</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {templateTechnologies.map((tech) => (
+                        <button
+                          key={tech}
+                          onClick={() => toggleTech(tech)}
+                          className={cn(
+                            "px-2.5 py-1 rounded-lg border text-xs",
+                            selectedTech.includes(tech)
+                              ? "bg-primary text-primary-fg"
+                              : "border-border/40 bg-background/60 text-muted-foreground"
+                          )}
+                        >
+                          {tech}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {hasActiveFilters && (
+                    <Button variant="outline" size="sm" onClick={clearFilters} className="w-full text-xs">
+                      Clear All Filters
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {loading ? (
-                <div className="text-center py-20"><div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin mx-auto" /></div>
+                <div className="text-center py-20">
+                  <div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin mx-auto" />
+                </div>
               ) : visibleTemplates.length === 0 ? (
                 <div className="text-center py-20">
                   <Layout className="w-14 h-14 text-muted-foreground/15 mx-auto mb-4" />
                   <p className="text-lg font-medium mb-2">No templates found</p>
-                  <Button variant="outline" size="sm" onClick={clearFilters} className="rounded-lg">Clear all filters</Button>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {activeCategory !== "All"
+                      ? `No templates matching "${activeCategory}" currently available.`
+                      : "No templates found matching your filter criteria."}
+                  </p>
+                  <Button variant="outline" size="sm" onClick={clearFilters} className="rounded-lg">
+                    Clear all filters
+                  </Button>
                 </div>
               ) : view === "grid" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">{visibleTemplates.map((t) => <TemplateCard key={t.id} template={t} view="grid" />)}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {visibleTemplates.map((t) => (
+                    <TemplateCard key={t.id} template={t} view="grid" />
+                  ))}
+                </div>
               ) : (
-                <div className="space-y-4">{visibleTemplates.map((t) => <TemplateCard key={t.id} template={t} view="list" />)}</div>
+                <div className="space-y-4">
+                  {visibleTemplates.map((t) => (
+                    <TemplateCard key={t.id} template={t} view="list" />
+                  ))}
+                </div>
               )}
+
               {hasMore && (
                 <div className="flex justify-center mt-10">
-                  <Button variant="outline" size="lg" onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)} className="rounded-xl px-8">
-                    Load More ({Math.min(ITEMS_PER_PAGE, filteredTemplates.length - visibleCount)} of {filteredTemplates.length - visibleCount} remaining)
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+                    className="rounded-xl px-8"
+                  >
+                    Load More (
+                    {Math.min(ITEMS_PER_PAGE, filteredTemplates.length - visibleCount)} of{" "}
+                    {filteredTemplates.length - visibleCount} remaining)
                   </Button>
                 </div>
               )}
@@ -407,6 +840,21 @@ export default function TemplatesPage() {
       </section>
       <Newsletter />
     </div>
+  );
+}
+
+export default function TemplatesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen py-32 text-center text-muted-foreground">
+          <div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin mx-auto mb-3" />
+          <p className="text-xs">Loading templates...</p>
+        </div>
+      }
+    >
+      <TemplatesPageContent />
+    </Suspense>
   );
 }
 

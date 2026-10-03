@@ -63,7 +63,7 @@ export default function DashboardPage() {
       icon: Package,
       label: "My Orders",
       href: "/dashboard/orders",
-      description: "View your purchase history & license keys",
+      description: "View your purchase history & downloads",
       color: "from-blue-500/10 to-indigo-500/10",
       iconColor: "text-blue-500",
     },

@@ -13,7 +13,6 @@ import {
   Download,
   CheckCircle,
   Lock,
-  Key,
   Copy,
   Check,
   Terminal,
@@ -21,7 +20,6 @@ import {
   FileCode,
   Zap,
 } from "lucide-react";
-import { LICENSE_TIERS, LicenseType } from "@/lib/licensing";
 
 interface Product {
   id: string;
@@ -44,9 +42,6 @@ export default function DownloadPage({ params }: { params: Promise<{ slug: strin
 
   const [product, setProduct] = useState<Product | null>(null);
   const [hasPurchased, setHasPurchased] = useState(false);
-  const [purchasedLicense, setPurchasedLicense] = useState<LicenseType>("personal");
-  const [licenseKey, setLicenseKey] = useState<string | null>(null);
-  const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -78,10 +73,6 @@ export default function DownloadPage({ params }: { params: Promise<{ slug: strin
               );
               if (matchedItem) {
                 setHasPurchased(true);
-                setPurchasedLicense((matchedItem.license as LicenseType) || "personal");
-                if (matchedItem.licenseKey) {
-                  setLicenseKey(matchedItem.licenseKey);
-                }
                 break;
               }
             }
@@ -90,13 +81,6 @@ export default function DownloadPage({ params }: { params: Promise<{ slug: strin
         .catch(() => {});
     }
   }, [status, slug, router]);
-
-  const handleCopyKey = () => {
-    if (!licenseKey) return;
-    navigator.clipboard.writeText(licenseKey);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2500);
-  };
 
   const handleCopyCmd = (cmd: string) => {
     navigator.clipboard.writeText(cmd);
@@ -172,47 +156,6 @@ export default function DownloadPage({ params }: { params: Promise<{ slug: strin
               </div>
 
               <div className="p-6 sm:p-8 space-y-6">
-                {/* License Key Card */}
-                {hasPurchased && licenseKey && (
-                  <div className="p-4 rounded-2xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        <Key className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-foreground">Official License Key</span>
-                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-primary/30 text-primary capitalize">
-                            {LICENSE_TIERS[purchasedLicense].name}
-                          </Badge>
-                        </div>
-                        <p className="font-mono text-sm font-bold text-primary mt-0.5">
-                          {licenseKey}
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyKey}
-                      className="rounded-xl text-xs gap-1.5 shrink-0 self-start sm:self-center"
-                    >
-                      {copiedKey ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copy Key</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-
                 {/* Downloads Action Box */}
                 <div className="p-6 rounded-2xl border border-border/30 bg-muted/20 space-y-4">
                   <div className="flex items-center justify-between">

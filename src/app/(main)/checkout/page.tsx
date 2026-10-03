@@ -21,16 +21,10 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useActivity } from "@/hooks/use-activity";
-import {
-  LICENSE_TIERS,
-  LicenseType,
-  calculateLicensePrice,
-} from "@/lib/licensing";
 
 interface CheckoutCartItem {
   id: string;
   price: number;
-  license: LicenseType;
   product: {
     id: string;
     title: string;
@@ -55,7 +49,6 @@ function CheckoutContent() {
   const { log } = useActivity();
 
   const directProductId = searchParams.get("productId");
-  const directLicense = (searchParams.get("license") as LicenseType) || "personal";
 
   const [cartItems, setCartItems] = useState<CheckoutCartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,12 +76,10 @@ function CheckoutContent() {
         .then((data) => {
           if (data.product) {
             const p = data.product;
-            const itemPrice = calculateLicensePrice(p.price, directLicense);
             setCartItems([
               {
                 id: `direct-${p.id}`,
-                price: itemPrice,
-                license: directLicense,
+                price: p.price,
                 product: p,
               },
             ]);
@@ -101,12 +92,13 @@ function CheckoutContent() {
       fetch("/api/cart")
         .then((r) => r.json())
         .then((d) => {
-          const items: CheckoutCartItem[] = (d.items || []).map((item: any) => ({
-            id: item.id,
-            price: calculateLicensePrice(item.product.price, item.license || "personal"),
-            license: item.license || "personal",
-            product: item.product,
-          }));
+          const items: CheckoutCartItem[] = (d.items || [])
+            .filter((item: any) => item && item.product)
+            .map((item: any) => ({
+              id: item.id,
+              price: item.product?.price || 0,
+              product: item.product,
+            }));
           setCartItems(items);
           setLoading(false);
         })
@@ -122,7 +114,7 @@ function CheckoutContent() {
       // Unauthenticated without directProductId: check if any items in cart
       setLoading(false);
     }
-  }, [directProductId, directLicense, status]);
+  }, [directProductId, status]);
 
   // Load Cashfree SDK
   useEffect(() => {
@@ -201,7 +193,6 @@ function CheckoutContent() {
           items: cartItems.map((i) => ({
             productId: i.product.id,
             price: i.price,
-            license: i.license,
           })),
           coupon: couponApplied ? couponData?.code : null,
           phone: phone.trim(),
@@ -309,7 +300,7 @@ function CheckoutContent() {
                         <div className="p-3 rounded-2xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex items-center gap-2.5">
                           <Sparkles className="w-4 h-4 text-primary shrink-0" />
                           <span>
-                            No password required! We will email your license key and download link instantly after payment.
+                            No password required! We will email your download link instantly after payment.
                           </span>
                         </div>
 
@@ -383,27 +374,26 @@ function CheckoutContent() {
                     </h2>
                     <div className="space-y-3">
                       {cartItems.map((item) => {
-                        const tier = LICENSE_TIERS[item.license || "personal"];
                         return (
                           <div
                             key={item.id}
                             className="flex items-center gap-4 p-3.5 rounded-2xl border border-border/30 bg-card/40"
                           >
                             <img
-                              src={item.product.thumbnail}
+                              src={item.product?.thumbnail || "/placeholder.png"}
                               alt=""
                               className="w-16 h-16 rounded-xl object-cover border border-border/30 shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs sm:text-sm font-bold text-foreground truncate">
-                                {item.product.title}
+                                {item.product?.title || "Template Package"}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-primary/30 text-primary">
-                                  {tier.name}
+                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-primary/30 text-primary capitalize">
+                                  {item.product?.category || "Digital Product"}
                                 </Badge>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {tier.badge}
+                                <span className="text-[10px] text-muted-foreground capitalize">
+                                  {item.product?.type}
                                 </span>
                               </div>
                             </div>

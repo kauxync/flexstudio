@@ -42,8 +42,8 @@ const VALUES = [
   },
   {
     icon: ShieldCheck,
-    title: "Honest & Transparent Licensing",
-    desc: "No recurring hidden subscriptions. Simple, perpetual licenses that give solo founders and agencies complete freedom to build.",
+    title: "Honest & Transparent Pricing",
+    desc: "No recurring hidden subscriptions. Simple, one-time purchases that give solo founders and agencies complete freedom to build.",
   },
   {
     icon: HeartHandshake,

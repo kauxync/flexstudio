@@ -19,7 +19,7 @@ const faqs = [
   { question: "What digital products and services does FlexStudioo offer?", answer: "FlexStudioo offers premium web templates, source code, SaaS boilerplates, and custom freelance full-stack web development services. All products and services are built with Next.js, React, TypeScript, and Tailwind CSS." },
   { question: "Can I hire a developer for a custom project or MVP?", answer: "Yes! We offer transparent freelance web development packages starting from ₹4,999 for landing pages and ₹14,999 for full-stack web apps, as well as hourly tasks at ₹999/hr." },
   { question: "Do I get full source code and intellectual property ownership?", answer: "Yes, 100%. Upon project completion, all source code, database schemas, and assets are transferred directly to your organization's GitHub repository." },
-  { question: "Do template purchases include lifetime updates?", answer: "Yes, all products on FlexStudioo come with perpetual licenses and lifetime updates at no extra cost." },
+  { question: "Do template purchases include lifetime updates?", answer: "Yes, all products on FlexStudioo come with one-time purchases and lifetime updates at no extra cost." },
 ];
 
 export default function Home() {

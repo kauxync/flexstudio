@@ -8,7 +8,7 @@ import { HelpCircle, BookOpen, ShieldCheck, Mail, MessageSquare, ArrowRight, Zap
 export const metadata: Metadata = generatePageMetadata({
   title: "Support & Help Center | FlexStudio",
   description:
-    "Get rapid technical help, setup instructions, licensing clarification, and assistance with FlexStudio web templates and source code.",
+    "Get rapid technical help, setup instructions, and assistance with FlexStudio web templates and source code.",
   path: "/support",
 });
 
@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: "What is your response time for technical support tickets?",
-    a: "Our core engineering team answers support inquiries within 24 hours on business days. Commercial and Extended license holders receive priority routing.",
+    a: "Our core engineering team answers support inquiries within 24 hours on business days.",
   },
 ];
 
@@ -65,7 +65,7 @@ export default function SupportPage() {
               How Can We Help You?
             </h1>
             <p className="max-w-2xl mx-auto text-sm sm:text-base text-muted-foreground">
-              Find instant setup guides, licensing answers, and direct technical assistance for all FlexStudio products.
+              Find instant setup guides, product answers, and direct technical assistance for all FlexStudio products.
             </p>
           </AnimatedSection>
         </div>
@@ -94,20 +94,20 @@ export default function SupportPage() {
             </Link>
 
             <Link
-              href="/license"
+              href="/terms"
               className="group p-6 rounded-3xl border border-border/50 bg-card/50 hover:border-primary/40 hover:bg-card/80 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 w-fit mb-4 group-hover:scale-110 transition-transform">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
-                <h2 className="font-bold text-base text-foreground mb-1">Licensing Terms</h2>
+                <h2 className="font-bold text-base text-foreground mb-1">Terms of Service</h2>
                 <p className="text-xs text-muted-foreground">
-                  Understand your commercial, SaaS, and client rights across Personal and Extended tiers.
+                  Understand usage rights, ownership, and the rules that apply to every purchase.
                 </p>
               </div>
               <div className="mt-4 flex items-center text-xs font-semibold text-indigo-400 gap-1">
-                Read License <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                Read Terms <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
 

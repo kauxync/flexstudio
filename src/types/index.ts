@@ -18,7 +18,6 @@ export interface Product {
   version: string;
   lastUpdated: string;
   author: Author;
-  license: LicenseType;
   isFeatured: boolean;
   isFree: boolean;
   status: "active" | "draft" | "archived";
@@ -42,12 +41,9 @@ export interface Author {
   slug: string;
 }
 
-export type LicenseType = "personal" | "commercial" | "extended";
-
 export interface CartItem {
   product: Product;
   quantity: number;
-  license: LicenseType;
 }
 
 export interface User {

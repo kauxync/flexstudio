@@ -29,7 +29,7 @@ function GitHubIcon() {
 const benefits = [
   "Access to 500+ premium templates",
   "Lifetime free updates",
-  "Commercial license included",
+  "Lifetime updates included",
   "Priority support channel",
 ];
 

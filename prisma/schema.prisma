@@ -83,6 +83,7 @@ model VerificationToken {
 model Product {
   id            String   @id @default(cuid())
   slug          String   @unique
+  storageCode   String?  @map("storage_code")
   title         String
   description   String
   shortDesc     String   @map("short_description")
@@ -117,6 +118,7 @@ model Product {
   @@index([type])
   @@index([category])
   @@index([featured])
+  @@index([storageCode])
   @@map("products")
 }
 
@@ -148,8 +150,6 @@ model OrderItem {
   orderId   String  @map("order_id")
   productId String  @map("product_id")
   price     Float
-  license   String  @default("personal") // personal | commercial | extended
-  licenseKey String? @map("license_key")
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -166,7 +166,6 @@ model CartItem {
   userId    String @map("user_id")
   productId String @map("product_id")
   quantity  Int    @default(1)
-  license   String @default("personal")
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)

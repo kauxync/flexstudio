@@ -261,7 +261,6 @@ function ContactFormInner() {
                     <option value="custom">Hire Custom Web Development / Project</option>
                     <option value="general">General Inquiry</option>
                     <option value="support">Technical Support &amp; Setup</option>
-                    <option value="licensing">Licensing &amp; Agency Rights</option>
                     <option value="billing">Invoices &amp; Billing</option>
                   </select>
                 </div>

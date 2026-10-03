@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createCashfreeOrder } from "@/lib/cashfree";
-import { generateLicenseKey } from "@/lib/licensing";
 
 export async function GET() {
   try {
@@ -155,8 +154,6 @@ export async function POST(req: NextRequest) {
           create: items.map((item: any) => ({
             productId: item.productId,
             price: item.price,
-            license: item.license || "personal",
-            licenseKey: generateLicenseKey(),
           })),
         },
       },

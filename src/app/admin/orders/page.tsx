@@ -24,7 +24,6 @@ import { Modal } from "@/components/ui/modal";
 interface OrderItem {
   id: string;
   price: number;
-  license: string;
   product: {
     id: string;
     title: string;
@@ -424,7 +423,7 @@ export default function AdminOrdersPage() {
                       <div>
                         <p className="font-semibold text-foreground">{item.product?.title || "Unknown Product"}</p>
                         <p className="text-[10px] text-muted-foreground capitalize">
-                          {item.product?.type || "Item"} · {item.license} license
+                          {item.product?.type || "Item"}
                         </p>
                       </div>
                     </div>

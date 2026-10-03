@@ -4,7 +4,7 @@ import { generatePageMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 export const metadata: Metadata = generatePageMetadata({
   title: "Contact Support & Engineering Studio | FlexStudioo",
   description:
-    "Get in touch with the FlexStudioo engineering team. Fast developer support, custom template development inquiries, and enterprise licensing assistance.",
+    "Get in touch with the FlexStudioo engineering team. Fast developer support, custom template development inquiries, and enterprise project assistance.",
   path: "/contact",
 });
 

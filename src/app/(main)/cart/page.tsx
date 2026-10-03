@@ -6,11 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import {
-  LICENSE_TIERS,
-  LicenseType,
-  calculateLicensePrice,
-} from "@/lib/licensing";
-import {
   Trash2,
   ShoppingCart,
   ArrowRight,
@@ -25,7 +20,6 @@ import {
 interface CartItem {
   id: string;
   productId: string;
-  license: LicenseType;
   product: {
     id: string;
     title: string;
@@ -67,28 +61,13 @@ export default function CartPage() {
     } catch {}
   };
 
-  const updateItemLicense = async (id: string, newLicense: LicenseType) => {
-    // Optimistic UI update
-    setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, license: newLicense } : item))
-    );
-
-    try {
-      await fetch(`/api/cart/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ license: newLicense }),
-      });
-    } catch (e) {
-      console.error("Failed to update item license", e);
-    }
-  };
-
   const getItemPrice = (item: CartItem) => {
-    return calculateLicensePrice(item.product.price, item.license || "personal");
+    if (!item?.product) return 0;
+    return item.product.price || 0;
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + getItemPrice(item), 0);
+  const validCartItems = cartItems.filter((item) => Boolean(item.product));
+  const subtotal = validCartItems.reduce((sum, item) => sum + getItemPrice(item), 0);
   const discount = 0;
   const total = subtotal - discount;
 
@@ -115,7 +94,7 @@ export default function CartPage() {
             </Badge>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2">Shopping Cart</h1>
             <p className="text-muted-foreground text-sm sm:text-base">
-              {cartItems.length} item{cartItems.length !== 1 ? "s" : ""} selected · Choose your license tiers below
+              {cartItems.length} item{cartItems.length !== 1 ? "s" : ""} selected · Review your items before checkout
             </p>
           </AnimatedSection>
         </div>
@@ -144,9 +123,8 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Cart Items (8 cols) */}
               <div className="lg:col-span-8 space-y-4">
-                {cartItems.map((item, i) => {
+                {validCartItems.map((item, i) => {
                   const price = getItemPrice(item);
-                  const tier = LICENSE_TIERS[item.license || "personal"];
 
                   return (
                     <AnimatedSection key={item.id} animation="fade-up" delay={i * 50}>
@@ -161,13 +139,13 @@ export default function CartPage() {
                           className="shrink-0 w-full sm:w-36 h-28 rounded-2xl overflow-hidden border border-border/40 relative group"
                         >
                           <img
-                            src={item.product.thumbnail}
+                            src={item.product.thumbnail || "/placeholder.png"}
                             alt={item.product.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </Link>
 
-                        {/* Info & License Selector */}
+                        {/* Info & Price */}
                         <div className="flex-1 min-w-0 w-full space-y-2.5">
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -200,35 +178,15 @@ export default function CartPage() {
                             </button>
                           </div>
 
-                          {/* License Tier Selector */}
+                          {/* Price */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-border/20">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-semibold text-muted-foreground">
-                                License:
-                              </span>
-                              <select
-                                value={item.license || "personal"}
-                                onChange={(e) =>
-                                  updateItemLicense(item.id, e.target.value as LicenseType)
-                                }
-                                className="h-8 px-2.5 rounded-xl border border-border/40 bg-card text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                              >
-                                <option value="personal">Personal — 1 Site (₹{item.product.price})</option>
-                                <option value="commercial">
-                                  Commercial — Client (₹{Math.round(item.product.price * 1.6)})
-                                </option>
-                                <option value="extended">
-                                  Extended — Unlimited (₹{Math.round(item.product.price * 3.2)})
-                                </option>
-                              </select>
-                            </div>
+                            <span className="text-[11px] font-semibold text-muted-foreground">
+                              Instant download · Lifetime updates
+                            </span>
 
                             <div className="text-right">
                               <span className="text-lg font-bold text-foreground block">
                                 ₹{price}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground">
-                                {tier.badge}
                               </span>
                             </div>
                           </div>
@@ -250,7 +208,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                    <span>Official License Keys Included</span>
+                    <span>Lifetime Updates Included</span>
                   </div>
                 </div>
               </div>

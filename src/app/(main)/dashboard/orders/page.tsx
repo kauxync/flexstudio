@@ -8,26 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { AnimatedSection } from "@/components/ui/animated-section";
+import { cn } from "@/lib/utils";
 import {
   Package,
   ArrowLeft,
   Clock,
   Download,
-  Copy,
-  Check,
   Printer,
   FileText,
-  Key,
   ExternalLink,
   ShieldCheck,
+  Star,
 } from "lucide-react";
-import { LICENSE_TIERS, LicenseType } from "@/lib/licensing";
 
 interface OrderItem {
   id: string;
+  productId: string;
   price: number;
-  license: LicenseType;
-  licenseKey?: string | null;
   product: {
     title: string;
     slug: string;
@@ -36,6 +33,22 @@ interface OrderItem {
     zipUrl: string | null;
   };
 }
+
+interface MyReview {
+  id: string;
+  productId: string;
+  rating: number;
+  comment: string;
+  verified: boolean;
+}
+
+interface ReviewTarget {
+  productId: string;
+  title: string;
+  thumbnail: string;
+}
+
+const RATING_LABELS = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
 
 interface Order {
   id: string;
@@ -58,7 +71,14 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeInvoice, setActiveInvoice] = useState<Order | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [myReviews, setMyReviews] = useState<Record<string, MyReview>>({});
+  const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login?callbackUrl=/dashboard/orders");
@@ -71,13 +91,97 @@ export default function OrdersPage() {
           setLoading(false);
         })
         .catch(() => setLoading(false));
+
+      fetch("/api/reviews?mine=1")
+        .then((r) => (r.ok ? r.json() : { reviews: [] }))
+        .then((d) => {
+          const map: Record<string, MyReview> = {};
+          (d.reviews || []).forEach((r: MyReview) => {
+            map[r.productId] = r;
+          });
+          setMyReviews(map);
+        })
+        .catch(() => {});
     }
   }, [status, router]);
 
-  const handleCopyKey = (key: string) => {
-    navigator.clipboard.writeText(key);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2500);
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const openReviewModal = (item: OrderItem) => {
+    const existing = myReviews[item.productId];
+    setReviewTarget({
+      productId: item.productId,
+      title: item.product?.title || "Product",
+      thumbnail: item.product?.thumbnail || "/placeholder.png",
+    });
+    setReviewRating(existing?.rating || 0);
+    setReviewComment(existing?.comment || "");
+    setHoverRating(0);
+    setReviewError("");
+  };
+
+  const closeReviewModal = () => {
+    setReviewTarget(null);
+    setReviewRating(0);
+    setReviewComment("");
+    setReviewError("");
+    setHoverRating(0);
+  };
+
+  const submitReview = async () => {
+    if (!reviewTarget) return;
+
+    if (reviewRating < 1) {
+      setReviewError("Please select a star rating");
+      return;
+    }
+    if (!reviewComment.trim()) {
+      setReviewError("Please write a short comment");
+      return;
+    }
+
+    const existing = myReviews[reviewTarget.productId];
+    setSubmittingReview(true);
+    setReviewError("");
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: existing ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          existing
+            ? { id: existing.id, rating: reviewRating, comment: reviewComment.trim() }
+            : { productId: reviewTarget.productId, rating: reviewRating, comment: reviewComment.trim() }
+        ),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.review) {
+        const saved = data.review;
+        setMyReviews((prev) => ({
+          ...prev,
+          [reviewTarget.productId]: {
+            id: saved.id,
+            productId: reviewTarget.productId,
+            rating: saved.rating,
+            comment: saved.comment,
+            verified: saved.verified,
+            createdAt: saved.createdAt,
+          },
+        }));
+        showToast(existing ? "Review updated" : "Review submitted. Thanks for your feedback!");
+        closeReviewModal();
+      } else {
+        setReviewError(data.error || "Failed to submit review");
+      }
+    } catch {
+      setReviewError("Network error, please try again");
+    }
+
+    setSubmittingReview(false);
   };
 
   const handlePrint = () => {
@@ -94,6 +198,22 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen pb-24">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-20 right-4 z-[110] animate-fade-in-up">
+          <div
+            className={cn(
+              "flex items-center gap-2 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-xl",
+              toast.type === "success"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                : "bg-red-500/10 border-red-500/30 text-red-400"
+            )}
+          >
+            <span className="text-sm font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <section className="pt-24 pb-8">
         <div className="mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
@@ -104,7 +224,9 @@ export default function OrdersPage() {
             >
               <ArrowLeft className="w-4 h-4" /> Back to Dashboard
             </Link>
-            {["admin", "super_admin"].includes((session?.user as any)?.role) && (
+            {["admin", "super_admin"].includes(
+              (session?.user as { role?: string } | null)?.role || ""
+            ) && (
               <Link href="/admin/orders">
                 <Button variant="outline" size="sm" className="rounded-xl text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10 font-semibold h-8">
                   <ShieldCheck className="w-3.5 h-3.5" />
@@ -114,9 +236,9 @@ export default function OrdersPage() {
             )}
           </div>
           <AnimatedSection animation="fade-up">
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2">My Orders &amp; Licenses</h1>
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2">My Orders</h1>
             <p className="text-muted-foreground text-sm">
-              View your transaction history, license keys, and downloadable invoices.
+              View your transaction history and downloadable invoices.
             </p>
           </AnimatedSection>
         </div>
@@ -203,7 +325,7 @@ export default function OrdersPage() {
                     {/* Items */}
                     <div className="space-y-3">
                       {order.items.map((item) => {
-                        const tier = LICENSE_TIERS[item.license as keyof typeof LICENSE_TIERS] || LICENSE_TIERS.personal;
+                        const myReview = myReviews[item.productId];
                         return (
                           <div
                             key={item.id}
@@ -219,38 +341,14 @@ export default function OrdersPage() {
                                 <p className="text-sm font-bold text-foreground truncate">
                                   {item.product?.title || "Product"}
                                 </p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <Badge variant="outline" className="text-[10px] px-2 py-0 border-primary/30 text-primary">
-                                    {tier?.name || "Standard"}
-                                  </Badge>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {tier?.badge || "License"}
-                                  </span>
-                                </div>
+                                <span className="text-[10px] text-muted-foreground capitalize block mt-0.5">
+                                  {item.product?.type || "Digital Product"}
+                                </span>
                               </div>
                             </div>
 
-                            {/* License Key & Downloads */}
+                            {/* Downloads */}
                             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-0 border-border/20">
-                              {/* License Key Badge */}
-                              {item.licenseKey && order.status === "paid" && (
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/40 text-xs font-mono">
-                                  <Key className="w-3.5 h-3.5 text-primary" />
-                                  <span className="text-foreground">{item.licenseKey}</span>
-                                  <button
-                                    onClick={() => handleCopyKey(item.licenseKey!)}
-                                    className="ml-1 text-muted-foreground hover:text-foreground"
-                                    title="Copy License Key"
-                                  >
-                                    {copiedKey === item.licenseKey ? (
-                                      <Check className="w-3 h-3 text-emerald-400" />
-                                    ) : (
-                                      <Copy className="w-3 h-3" />
-                                    )}
-                                  </button>
-                                </div>
-                              )}
-
                               {/* Download Link */}
                               {order.status === "paid" ? (
                                 item.product?.zipUrl ? (
@@ -275,6 +373,48 @@ export default function OrdersPage() {
                               ) : (
                                 <span className="text-xs text-amber-400">Payment pending</span>
                               )}
+
+                              {/* Review */}
+                              {order.status === "paid" &&
+                                (myReview ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openReviewModal(item)}
+                                    title={
+                                      myReview.verified
+                                        ? "Verified purchase review — click to edit"
+                                        : "Click to edit your review"
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/20 text-xs font-bold transition-all"
+                                  >
+                                    <span className="flex items-center gap-0.5">
+                                      {[1, 2, 3, 4, 5].map((v) => (
+                                        <Star
+                                          key={v}
+                                          className={cn(
+                                            "w-3.5 h-3.5",
+                                            v <= myReview.rating
+                                              ? "fill-amber-400 text-amber-400"
+                                              : "text-muted-foreground/30"
+                                          )}
+                                        />
+                                      ))}
+                                    </span>
+                                    <span>
+                                      Your review
+                                      {myReview.verified && " ✓"}
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => openReviewModal(item)}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted hover:border-primary/40 text-xs font-bold text-foreground transition-all"
+                                  >
+                                    <Star className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>Write a review</span>
+                                  </button>
+                                ))}
                             </div>
                           </div>
                         );
@@ -357,7 +497,6 @@ export default function OrdersPage() {
                 <thead className="bg-muted/40 text-muted-foreground border-b border-border/30">
                   <tr>
                     <th className="py-2.5 px-3 text-left font-semibold">Description</th>
-                    <th className="py-2.5 px-3 text-left font-semibold">License Tier</th>
                     <th className="py-2.5 px-3 text-right font-semibold">Amount</th>
                   </tr>
                 </thead>
@@ -366,9 +505,6 @@ export default function OrdersPage() {
                     <tr key={item.id}>
                       <td className="py-3 px-3 font-medium text-foreground">
                         {item.product?.title || "Purchased Product"}
-                      </td>
-                      <td className="py-3 px-3 text-muted-foreground capitalize">
-                        {item.license} License
                       </td>
                       <td className="py-3 px-3 text-right font-bold text-foreground">
                         ₹{item.price}
@@ -421,6 +557,100 @@ export default function OrdersPage() {
                 onClick={() => setActiveInvoice(null)}
               >
                 Done
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Review Modal */}
+      {reviewTarget && (
+        <Modal
+          isOpen={!!reviewTarget}
+          onClose={closeReviewModal}
+          title={myReviews[reviewTarget.productId] ? "Edit your review" : "Write a review"}
+        >
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <img
+                src={reviewTarget.thumbnail}
+                alt={reviewTarget.title}
+                className="w-12 h-12 rounded-xl object-cover border border-border/30 shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{reviewTarget.title}</p>
+                <span className="text-[11px] text-muted-foreground">Verified purchase required</span>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                Your rating
+              </p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => {
+                      setReviewRating(v);
+                      setReviewError("");
+                    }}
+                    onMouseEnter={() => setHoverRating(v)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    aria-label={`${v} star${v > 1 ? "s" : ""}`}
+                    className="p-0.5 transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={cn(
+                        "w-7 h-7 transition-colors",
+                        (hoverRating ? v <= hoverRating : v <= reviewRating)
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-muted-foreground/30"
+                      )}
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-xs font-semibold text-muted-foreground">
+                  {RATING_LABELS[hoverRating || reviewRating] || ""}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                Your comment
+              </p>
+              <textarea
+                value={reviewComment}
+                onChange={(e) => {
+                  setReviewComment(e.target.value);
+                  setReviewError("");
+                }}
+                rows={4}
+                maxLength={1000}
+                placeholder="Share your experience with this product..."
+                className="w-full rounded-xl border border-border/40 bg-muted/20 px-3.5 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 resize-none"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1 text-right">
+                {reviewComment.length}/1000
+              </p>
+            </div>
+
+            {reviewError && <p className="text-xs font-medium text-red-400">{reviewError}</p>}
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-border/20">
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={closeReviewModal}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="rounded-xl px-5"
+                loading={submittingReview}
+                disabled={reviewRating < 1 || !reviewComment.trim()}
+                onClick={submitReview}
+              >
+                {myReviews[reviewTarget.productId] ? "Update review" : "Submit review"}
               </Button>
             </div>
           </div>

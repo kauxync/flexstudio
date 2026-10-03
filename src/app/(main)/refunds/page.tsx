@@ -146,7 +146,7 @@ export default function RefundsPage() {
                 5. Payment Processing Timelines
               </h2>
               <p>
-                Approved refunds are processed back to the original method of payment (Stripe, Credit Card, or Razorpay). Payouts typically appear on your billing statement within <strong>3 to 7 business days</strong> depending on your financial institution. Once refunded, your download license key and repository access are permanently revoked.
+                Approved refunds are processed back to the original method of payment (Stripe, Credit Card, or Razorpay). Payouts typically appear on your billing statement within <strong>3 to 7 business days</strong> depending on your financial institution. Once refunded, your download and repository access are permanently revoked.
               </p>
             </div>
           </div>
