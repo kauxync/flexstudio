@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+hostinger-storage/
 
 # next.js
 /.next/
