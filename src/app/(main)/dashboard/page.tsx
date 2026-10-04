@@ -106,9 +106,9 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen relative pb-20">
+    <div className="min-h-screen relative pb-20 overflow-x-clip">
       {/* Atmosphere Glow */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-primary/10 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] max-w-[200vw] h-[400px] bg-primary/10 blur-[130px] rounded-full pointer-events-none" />
 
       {/* Header Profile Section */}
       <section className="pt-28 pb-8 relative">

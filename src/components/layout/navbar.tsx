@@ -323,7 +323,7 @@ export function Navbar() {
         />
         <div
           className={cn(
-            "absolute top-[calc(2px+68px)] inset-x-0 bottom-0 bg-background/98 backdrop-blur-2xl transition-all duration-300 ease-out overflow-hidden border-t border-border/40",
+            "absolute top-16 lg:top-[68px] inset-x-0 bottom-0 bg-background/98 backdrop-blur-2xl transition-all duration-300 ease-out overflow-hidden border-t border-border/40",
             mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}
         >

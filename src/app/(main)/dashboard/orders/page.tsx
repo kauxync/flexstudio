@@ -492,7 +492,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Itemized Table */}
-            <div className="border border-border/40 rounded-2xl overflow-hidden">
+            <div className="border border-border/40 rounded-2xl overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-muted/40 text-muted-foreground border-b border-border/30">
                   <tr>

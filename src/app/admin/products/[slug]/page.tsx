@@ -504,7 +504,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={previewHref}
             target="_blank"
@@ -537,8 +537,8 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
           <div className="w-9 h-9 rounded-xl bg-gold/15 text-gold border border-gold/30 flex items-center justify-center font-bold font-mono">
             ID
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-muted-foreground font-medium">Permanent Storage Code:</span>
               <span className="font-mono font-bold text-foreground text-sm tracking-widest bg-background/80 px-2 py-0.5 rounded-lg border border-border/40">
                 {templateCode}
@@ -548,7 +548,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
                 Unchangeable
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-[11px] text-muted-foreground mt-0.5 break-all">
               Hostinger CDN Path: <span className="font-mono text-foreground">dataflexstudio.kauxync.in/uploads/{templateCode}/</span>
             </p>
           </div>
@@ -1074,7 +1074,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
                         alt={`Showcase ${idx + 1}`}
                         className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
                       />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <div className="absolute inset-0 bg-black/60 opacity-0 pointer-coarse:opacity-100 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <a
                           href={imgUrl}
                           target="_blank"

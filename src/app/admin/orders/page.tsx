@@ -362,8 +362,8 @@ export default function AdminOrdersPage() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Change to:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted-foreground shrink-0">Change to:</span>
                 {["paid", "pending", "refunded", "failed", "cancelled"].map((st) => (
                   <button
                     key={st}

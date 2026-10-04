@@ -659,8 +659,8 @@ function TemplatesPageContent() {
             <div className="flex-1 min-w-0">
               {/* Active Filter Notice if activeCategory !== All */}
               {activeCategory !== "All" && (
-                <div className="mb-4 p-3.5 rounded-2xl border border-gold/30 bg-gold/5 flex items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2">
+                <div className="mb-4 p-3.5 rounded-2xl border border-gold/30 bg-gold/5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-muted-foreground">Category filter:</span>
                     <span className="font-bold text-foreground bg-gold/20 text-gold px-2 py-0.5 rounded-lg border border-gold/30">
                       {activeCategory}
@@ -679,7 +679,7 @@ function TemplatesPageContent() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowFilters(!showFilters)}

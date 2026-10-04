@@ -98,7 +98,7 @@ export function AdminHeader({
   });
 
   return (
-    <header className="sticky top-0 z-40 h-16 bg-background/80 backdrop-blur-xl border-b border-border/40 px-4 sm:px-6 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 h-16 bg-background/80 backdrop-blur-xl border-b border-border/40 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
       {/* Left: Mobile hamburger, logo icon & Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
         <button
@@ -114,11 +114,11 @@ export function AdminHeader({
           <div className="w-7 h-7 rounded-lg overflow-hidden border border-border/40 bg-card p-0.5 flex items-center justify-center shrink-0 shadow-sm">
             <LogoIcon size={26} className="w-full h-full" />
           </div>
-          <span className="font-serif font-bold text-sm text-foreground">FlexStudio</span>
+          <span className="hidden sm:inline font-serif font-bold text-sm text-foreground">FlexStudio</span>
         </Link>
 
         {/* Dynamic Breadcrumbs */}
-        <nav className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+        <nav className="hidden lg:flex items-center gap-1.5 text-xs text-muted-foreground min-w-0 truncate">
           {breadcrumbs.map((crumb, idx) => (
             <div key={crumb.url} className="flex items-center gap-1.5 truncate">
               {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
@@ -142,24 +142,26 @@ export function AdminHeader({
         {/* Command Search Bar Trigger */}
         <button
           onClick={onOpenCommandPalette}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground bg-muted/40 hover:bg-muted/70 border border-border/40 rounded-xl transition-all w-36 sm:w-56 md:w-64"
+          aria-label="Search"
+          className="flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 text-xs text-muted-foreground bg-muted/40 hover:bg-muted/70 border border-border/40 rounded-xl transition-all w-9 sm:w-40 lg:w-56 shrink-0"
         >
           <Search className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
-          <span className="truncate flex-1 text-left">Search or press</span>
-          <kbd className="hidden sm:inline-block font-mono text-[10px] text-muted-foreground/80 px-1.5 py-0.5 rounded border border-border/40 bg-background/80">
+          <span className="hidden sm:block truncate flex-1 text-left">Search or press</span>
+          <kbd className="hidden lg:inline-block font-mono text-[10px] text-muted-foreground/80 px-1.5 py-0.5 rounded border border-border/40 bg-background/80">
             Ctrl+K
           </kbd>
         </button>
 
         {/* Quick Add Dropdown */}
-        <div className="relative" ref={createMenuRef}>
+        <div className="relative shrink-0" ref={createMenuRef}>
           <button
             onClick={() => setCreateMenuOpen(!createMenuOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 transition-all shadow-sm"
+            aria-label="Create new"
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Create</span>
-            <ChevronDown className={`w-3 h-3 transition-transform ${createMenuOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`hidden sm:block w-3 h-3 transition-transform ${createMenuOpen ? "rotate-180" : ""}`} />
           </button>
 
           {createMenuOpen && (
@@ -185,7 +187,7 @@ export function AdminHeader({
         </div>
 
         {/* Notifications Dropdown */}
-        <div className="relative" ref={notifRef}>
+        <div className="relative shrink-0" ref={notifRef}>
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="relative p-2 rounded-xl border border-border/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -200,7 +202,7 @@ export function AdminHeader({
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-scale-in">
+            <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] rounded-2xl border border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-scale-in">
               <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between bg-muted/20">
                 <span className="text-xs font-bold text-foreground">Notifications</span>
                 {unreadCount > 0 && (
@@ -281,7 +283,7 @@ export function AdminHeader({
         <ThemeToggle className="h-9 w-9 rounded-xl border border-border/40" />
 
         {/* Admin Profile Dropdown */}
-        <div className="relative" ref={profileRef}>
+        <div className="relative shrink-0" ref={profileRef}>
           <button
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
             className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl border border-border/40 hover:bg-muted/40 transition-colors"

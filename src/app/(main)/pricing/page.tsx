@@ -296,28 +296,30 @@ export default function PricingPage() {
 
           {/* Pricing Model Switcher */}
           <AnimatedSection animation="fade-up" delay={100}>
-            <div className="inline-flex items-center p-1.5 rounded-2xl bg-card/60 border border-border/50 shadow-md backdrop-blur-xl">
+            <div className="inline-flex flex-wrap justify-center items-center p-1.5 rounded-2xl bg-card/60 border border-border/50 shadow-md backdrop-blur-xl">
               <button
                 onClick={() => setActiveTab("projects")}
                 className={cn(
-                  "px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-300",
+                  "px-3 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-300 whitespace-nowrap",
                   activeTab === "projects"
                     ? "bg-primary text-white shadow-md shadow-primary/25"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Fixed Project Packages
+                <span className="sm:hidden">Fixed Projects</span>
+                <span className="hidden sm:inline">Fixed Project Packages</span>
               </button>
               <button
                 onClick={() => setActiveTab("retainers")}
                 className={cn(
-                  "px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-300",
+                  "px-3 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-300 whitespace-nowrap",
                   activeTab === "retainers"
                     ? "bg-primary text-white shadow-md shadow-primary/25"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Hourly &amp; Monthly Retainers
+                <span className="sm:hidden">Retainers</span>
+                <span className="hidden sm:inline">Hourly &amp; Monthly Retainers</span>
               </button>
             </div>
           </AnimatedSection>

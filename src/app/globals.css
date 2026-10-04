@@ -186,6 +186,7 @@ body {
               color var(--duration-slow) var(--ease-out);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
 }
 
 /* ============================================
@@ -730,13 +731,28 @@ body {
 }
 
 .markdown-content-body table {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
   border-collapse: collapse;
   margin: 1.25rem 0;
   font-size: 0.875rem;
   border-radius: 0.75rem;
-  overflow: hidden;
   border: 1px solid var(--border-color);
+}
+
+.markdown-content-body :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 .markdown-content-body th {

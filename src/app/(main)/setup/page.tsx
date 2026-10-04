@@ -31,7 +31,7 @@ function CodeBlock({ children }: { children: string }) {
       </pre>
       <button
         onClick={copyToClipboard}
-        className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-all"
+        className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 pointer-coarse:opacity-100 group-hover:opacity-100 transition-all"
       >
         <Copy className="w-3 h-3" />
       </button>

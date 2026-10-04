@@ -98,7 +98,7 @@ export default function WishlistPage() {
                     <div className="flex gap-4 p-4 rounded-2xl border border-border/30 bg-card/20 hover:bg-card hover:border-border/50 hover:shadow-lg transition-all duration-500">
                       {/* Thumbnail */}
                       <Link href={`/templates/${item.slug}`} className="shrink-0">
-                        <div className="relative h-24 w-32 rounded-xl overflow-hidden">
+                        <div className="relative h-20 w-24 sm:h-24 sm:w-32 rounded-xl overflow-hidden">
                           <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
                         </div>
@@ -127,14 +127,14 @@ export default function WishlistPage() {
                             <span key={tech} className="text-[10px] px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground/60">{tech}</span>
                           ))}
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-baseline gap-2">
                             <span className="text-lg font-bold">₹{item.price}</span>
                             {item.originalPrice && (
                               <span className="text-xs text-muted-foreground line-through">₹{item.originalPrice}</span>
                             )}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-1.5">
                             <Link href={`/preview/${item.slug}`}>
                               <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs">
                                 <Eye className="w-3.5 h-3.5 mr-1" />

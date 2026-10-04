@@ -158,7 +158,7 @@ export default function DownloadPage({ params }: { params: Promise<{ slug: strin
               <div className="p-6 sm:p-8 space-y-6">
                 {/* Downloads Action Box */}
                 <div className="p-6 rounded-2xl border border-border/30 bg-muted/20 space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-semibold text-sm flex items-center gap-2">
                       <Download className="w-4 h-4 text-primary" />
                       Production Files & Source Bundle
@@ -230,7 +230,7 @@ export default function DownloadPage({ params }: { params: Promise<{ slug: strin
                 {/* Quickstart Setup Commands */}
                 {hasPurchased && (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                         <Terminal className="w-3.5 h-3.5 text-primary" />
                         Developer Quickstart Guide

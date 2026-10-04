@@ -208,12 +208,12 @@ export default function PreviewPage({ params }: { params: Promise<{ slug: string
 
         <div
           className={cn(
-            "h-full transition-all duration-500 ease-out overflow-hidden shadow-2xl relative",
+            "h-full max-w-full transition-all duration-500 ease-out overflow-hidden shadow-2xl relative",
             device === "desktop" && "w-full rounded-2xl border border-border/30",
             device === "tablet" && "w-[768px] rounded-3xl border-4 border-card shadow-2xl ring-1 ring-border/40",
             device === "mobile" && "w-[375px] rounded-[36px] border-8 border-card shadow-2xl ring-1 ring-border/40"
           )}
-          style={{ maxWidth: deviceWidths[device] }}
+          style={{ maxWidth: `min(${deviceWidths[device]}, 100%)` }}
         >
           {device === "mobile" && (
             <div className="absolute top-2 left-1/2 -translate-x-1/2 h-4 w-28 bg-card rounded-full z-10" />

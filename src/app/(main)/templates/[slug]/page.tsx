@@ -387,12 +387,12 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
               {lighthouseScores.enabled && (
                 <AnimatedSection animation="fade-up" delay={100}>
                   <div className="p-5 sm:p-6 rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                           <Gauge className="w-4 h-4" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
                             Lighthouse Audited Benchmark
                           </h3>
@@ -489,7 +489,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ slug:
                       {product.shortDesc}
                     </p>
 
-                    <div className="flex items-center gap-3 mt-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star

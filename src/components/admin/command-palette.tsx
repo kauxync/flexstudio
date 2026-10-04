@@ -100,10 +100,22 @@ export function CommandPalette({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 sm:pt-28 px-4 bg-black/60 backdrop-blur-md animate-fade-in">
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-20 sm:pt-28 px-4 bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-xl rounded-2xl border border-border/40 bg-card/95 shadow-2xl overflow-hidden backdrop-blur-2xl animate-scale-in"
         onClick={(e) => e.stopPropagation()}

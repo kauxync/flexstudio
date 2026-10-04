@@ -24,13 +24,22 @@ export function Modal({ open, isOpen, onClose, title, children, className }: Mod
     return () => { document.body.style.overflow = ""; };
   }, [isModalOpen]);
 
+  useEffect(() => {
+    if (!isModalOpen) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isModalOpen, onClose]);
+
   if (!isModalOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={onClose} />
       <div className={cn(
-        "relative w-full max-w-lg bg-card rounded-2xl border border-border/30 shadow-xl p-6 animate-scale-in",
+        "relative w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-card rounded-2xl border border-border/30 shadow-xl p-5 sm:p-6 animate-scale-in",
         className
       )}>
         <div className="flex items-center justify-between mb-4">

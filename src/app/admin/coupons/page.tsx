@@ -364,7 +364,7 @@ export default function AdminCouponsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="font-semibold text-foreground block mb-1">
                 Value {form.discountType === "percentage" ? "(%)" : "(₹)"} *

@@ -93,7 +93,7 @@ export function Hero() {
           </div>
 
           {/* Headline */}
-          <h1 className={`font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold text-center leading-[0.95] mb-8 transition-all duration-1000 ease-out delay-100 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <h1 className={`font-display text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold text-center leading-[0.95] mb-8 transition-all duration-1000 ease-out delay-100 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
             <span className="block text-foreground">Craft exceptional</span>
             <span className="block mt-2">
               <span className="gradient-text-dark">{currentText}</span>
