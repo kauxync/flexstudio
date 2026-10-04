@@ -91,6 +91,33 @@ export async function fetchCashfreeOrder(orderId: string) {
   return data;
 }
 
+export async function cancelCashfreeOrder(orderId: string): Promise<boolean> {
+  try {
+    // Terminate Order API — stops any further payment against this order
+    const res = await fetch(`${BASE_URL}/orders/${orderId}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify({ order_status: "TERMINATED" }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      console.error(
+        "[CASHFREE_CANCEL]",
+        orderId,
+        res.status,
+        data?.message || "Failed to terminate Cashfree order"
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[CASHFREE_CANCEL]", orderId, error);
+    return false;
+  }
+}
+
 export function verifyWebhookSignature(
   signature: string,
   timestamp: string,

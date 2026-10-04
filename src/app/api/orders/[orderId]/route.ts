@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchCashfreeOrder } from "@/lib/cashfree";
+import { cancelOrder, ensureCouponUsage } from "@/lib/order-actions";
 
 export async function GET(
   req: NextRequest,
@@ -51,13 +52,18 @@ export async function GET(
             });
           }
 
+          await ensureCouponUsage(order);
+
           order.status = "paid";
-        } else if (newStatus === "failed" || newStatus === "terminated") {
-          await prisma.order.update({
-            where: { id: orderId },
-            data: { status: "failed" },
-          });
-          order.status = "failed";
+        } else if (
+          newStatus === "failed" ||
+          newStatus === "terminated" ||
+          newStatus === "termination_requested" ||
+          newStatus === "expired" ||
+          newStatus === "cancelled"
+        ) {
+          const result = await cancelOrder(orderId, { verifyCashfree: false });
+          order.status = result.ok ? "cancelled" : order.status;
         }
       } catch (cfError) {
         console.error("[ORDER_STATUS_CHECK]", cfError);
@@ -97,7 +103,7 @@ export async function PATCH(
     const { orderId } = await params;
     const { status } = await req.json();
 
-    const validStatuses = ["pending", "paid", "failed", "refunded"];
+    const validStatuses = ["pending", "paid", "failed", "refunded", "cancelled"];
     if (!status || !validStatuses.includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }

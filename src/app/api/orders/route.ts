@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createCashfreeOrder } from "@/lib/cashfree";
+import { cancelOrder } from "@/lib/order-actions";
 
 export async function GET() {
   try {
@@ -86,15 +87,16 @@ export async function POST(req: NextRequest) {
       customerPhone = existingUser.phone || phone || "9999999999";
     }
 
-    // Clean up stale pending orders for this user (older than 5 minutes)
+    // Cancel abandoned pending orders (older than 5 minutes): this also
+    // releases any coupon usage and cancels the order on Cashfree
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    await prisma.order.deleteMany({
-      where: {
-        userId,
-        status: "pending",
-        createdAt: { lt: fiveMinutesAgo },
-      },
+    const staleOrders = await prisma.order.findMany({
+      where: { userId, status: "pending", createdAt: { lt: fiveMinutesAgo } },
+      select: { id: true },
     });
+    for (const stale of staleOrders) {
+      await cancelOrder(stale.id, { verifyCashfree: false });
+    }
 
     const total = items.reduce((sum: number, item: any) => sum + item.price, 0);
 

@@ -200,7 +200,7 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/30 w-full md:w-auto overflow-x-auto">
-          {["all", "paid", "pending", "failed", "refunded"].map((s) => (
+          {["all", "paid", "pending", "failed", "cancelled", "refunded"].map((s) => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
@@ -364,7 +364,7 @@ export default function AdminOrdersPage() {
 
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Change to:</span>
-                {["paid", "pending", "refunded", "failed"].map((st) => (
+                {["paid", "pending", "refunded", "failed", "cancelled"].map((st) => (
                   <button
                     key={st}
                     disabled={updatingStatus || selectedOrder.status === st}

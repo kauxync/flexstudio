@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,23 @@ import { AnimatedSection } from "@/components/ui/animated-section";
 export default function PaymentCancelPage() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
+  const cancelRequested = useRef(false);
+
+  // Cancel the order in DB + Cashfree and release the coupon usage
+  useEffect(() => {
+    if (!orderId || cancelRequested.current) return;
+    cancelRequested.current = true;
+
+    fetch(`/api/orders/${orderId}/cancel`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        // Payment actually succeeded after all — show the success flow instead
+        if (data?.status === "paid") {
+          window.location.replace(`/payment-success?order_id=${orderId}`);
+        }
+      })
+      .catch(() => {});
+  }, [orderId]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

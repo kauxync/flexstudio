@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Loader2, Download, ShoppingBag } from "lucide-react";
 import { useActivity } from "@/hooks/use-activity";
 
-type OrderStatus = "loading" | "paid" | "pending" | "failed";
+type OrderStatus = "loading" | "paid" | "pending" | "failed" | "cancelled";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
@@ -17,6 +17,25 @@ export default function PaymentSuccessPage() {
   const cfStatus = searchParams.get("cf_status");
   const [status, setStatus] = useState<OrderStatus>("loading");
   const [pollCount, setPollCount] = useState(0);
+  const cancelRequested = useRef(false);
+
+  // Cancel a dead order: releases the coupon and cancels it in Cashfree too
+  const cancelAbandonedOrder = useCallback(() => {
+    if (!orderId || cancelRequested.current) return;
+    cancelRequested.current = true;
+    fetch(`/api/orders/${orderId}/cancel`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        // Cashfree says the payment actually went through
+        if (data?.status === "paid") {
+          setStatus("paid");
+          window.dispatchEvent(new Event("cart-updated"));
+        } else if (data?.status === "cancelled") {
+          setStatus("cancelled");
+        }
+      })
+      .catch(() => {});
+  }, [orderId]);
 
   const checkOrder = useCallback(async () => {
     if (!orderId) {
@@ -42,6 +61,8 @@ export default function PaymentSuccessPage() {
         } else if (data.order.status === "failed") {
           setStatus("failed");
           log("payment_failed", { orderId });
+        } else if (data.order.status === "cancelled") {
+          setStatus("cancelled");
         } else {
           setStatus("pending");
         }
@@ -67,12 +88,14 @@ export default function PaymentSuccessPage() {
     return () => clearTimeout(timer);
   }, [status, pollCount, checkOrder]);
 
-  // Only show failed after all polling exhausted
+  // Only show failed after all polling exhausted — the payment is abandoned,
+  // so cancel the order and release the coupon usage
   useEffect(() => {
     if (status === "pending" && pollCount >= 10) {
       setStatus("failed");
+      cancelAbandonedOrder();
     }
-  }, [status, pollCount]);
+  }, [status, pollCount, cancelAbandonedOrder]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -128,6 +151,23 @@ export default function PaymentSuccessPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/dashboard/orders"><Button className="rounded-xl px-6">View Orders</Button></Link>
               <Link href="/cart"><Button variant="outline" className="rounded-xl px-6">Back to Cart</Button></Link>
+            </div>
+          </div>
+        )}
+
+        {status === "cancelled" && (
+          <div className="animate-fade-in-up">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10 mx-auto mb-6">
+              <XCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Payment Cancelled</h1>
+            <p className="text-muted-foreground mb-2">
+              This order was cancelled and any coupon used has been released.
+            </p>
+            {orderId && <p className="text-xs text-muted-foreground/60 mb-8 font-mono">Order: {orderId.slice(0, 16)}...</p>}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/cart"><Button className="rounded-xl px-6">Back to Cart</Button></Link>
+              <Link href="/templates"><Button variant="outline" className="rounded-xl px-6">Browse Templates</Button></Link>
             </div>
           </div>
         )}

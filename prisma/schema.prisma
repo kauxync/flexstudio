@@ -129,7 +129,7 @@ model Product {
 model Order {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
-  status      String   @default("pending") // pending | paid | failed | refunded
+  status      String   @default("pending") // pending | paid | failed | refunded | cancelled
   total       Float
   coupon      String?
   discount    Float    @default(0)

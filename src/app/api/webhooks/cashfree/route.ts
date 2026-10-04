@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/cashfree";
+import { cancelOrder, ensureCouponUsage } from "@/lib/order-actions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +18,8 @@ export async function POST(req: NextRequest) {
 
     const body = JSON.parse(rawBody);
     const eventType = body.type;
-    const payload = body.payload;
+    // Cashfree sends the event data under `data` (some versions use `payload`)
+    const payload = body.data || body.payload;
 
     console.log("[CASHFREE_WEBHOOK] Event:", eventType);
 
@@ -61,20 +63,36 @@ export async function POST(req: NextRequest) {
           where: { userId: order.userId },
         });
 
+        // Restore coupon usage if it was released by an earlier cancellation
+        await ensureCouponUsage(order);
+
         console.log("[CASHFREE_WEBHOOK] Order", orderId, "marked as paid");
       }
-    } else if (
-      eventType === "PAYMENT_FAILED_WEBHOOK" ||
-      eventType === "PAYMENT_TERMINATED_WEBHOOK"
-    ) {
+    } else if (eventType === "PAYMENT_FAILED_WEBHOOK") {
+      // A payment attempt failed but the Cashfree order is still payable,
+      // so keep the order active (and the coupon reserved) for a retry.
       const orderId = payload?.order?.order_id;
 
       if (orderId) {
-        await prisma.order.update({
-          where: { id: orderId },
+        await prisma.order.updateMany({
+          where: { id: orderId, status: "pending" },
           data: { status: "failed" },
         });
-        console.log("[CASHFREE_WEBHOOK] Order", orderId, "marked as failed");
+        console.log("[CASHFREE_WEBHOOK] Order", orderId, "payment attempt failed");
+      }
+    } else if (
+      eventType === "PAYMENT_USER_DROPPED_WEBHOOK" ||
+      eventType === "PAYMENT_USER_STOPPED_WEBHOOK" ||
+      eventType === "PAYMENT_TERMINATED_WEBHOOK" ||
+      eventType === "ORDER_EXPIRED_WEBHOOK" ||
+      eventType === "ORDER_TERMINATED_WEBHOOK"
+    ) {
+      // User abandoned/cancelled the payment — cancel the order and release the coupon
+      const orderId = payload?.order?.order_id;
+
+      if (orderId) {
+        const result = await cancelOrder(orderId);
+        console.log("[CASHFREE_WEBHOOK] Order", orderId, "cancel result:", result);
       }
     }
 
