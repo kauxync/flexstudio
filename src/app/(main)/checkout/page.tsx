@@ -42,6 +42,12 @@ declare global {
   }
 }
 
+interface CashfreeCheckoutResult {
+  error?: { message?: string } | string | boolean;
+  redirect?: boolean;
+  paymentDetails?: { paymentMessage?: string };
+}
+
 function CheckoutContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -53,6 +59,7 @@ function CheckoutContent() {
   const [cartItems, setCartItems] = useState<CheckoutCartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [payStatus, setPayStatus] = useState<"" | "confirming" | "cancelled">("");
 
   // Guest details state
   const [guestName, setGuestName] = useState("");
@@ -169,6 +176,30 @@ function CheckoutContent() {
     }
   };
 
+  // Ask the server once (it queries Cashfree) for the order status
+  const fetchOrderStatus = async (orderId: string): Promise<string> => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      const d = await res.json();
+      const st = d.order?.status;
+      if (typeof st === "string") return st;
+    } catch {
+      // ignore — treated as pending
+    }
+    return "pending";
+  };
+
+  // Quick verification right after the popup closes: resolves paid/failed fast,
+  // retries a few times while the payment is still settling
+  const verifyOrderStatus = async (orderId: string): Promise<string> => {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const st = await fetchOrderStatus(orderId);
+      if (st === "paid" || st === "failed" || st === "cancelled") return st;
+      if (attempt < 3) await new Promise((r) => setTimeout(r, 700));
+    }
+    return "pending";
+  };
+
   const handleCheckout = async () => {
     // Validate contact info
     const customerEmail = session?.user?.email || guestEmail.trim();
@@ -185,6 +216,7 @@ function CheckoutContent() {
     }
 
     setProcessing(true);
+    setPayStatus("");
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -217,19 +249,52 @@ function CheckoutContent() {
       }
 
       // Launch Cashfree checkout as a popup on this page (no redirect away)
-      const checkoutResult = await cashfreeRef.current.checkout({
-        paymentSessionId: data.paymentSessionId,
-        redirectTarget: "_modal",
-      });
+      setPayStatus("confirming");
 
-      // Popup closed (or checkout errored) — cancel order & release coupon
-      if (checkoutResult?.error) {
+      let checkoutResult: CashfreeCheckoutResult | undefined;
+      try {
+        checkoutResult = await cashfreeRef.current.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_modal",
+        });
+      } catch (err) {
+        console.error(err);
+      }
+
+      // No paymentDetails + error => the popup was closed (or errored)
+      // before any payment finished
+      const userClosed = !!checkoutResult?.error && !checkoutResult?.paymentDetails;
+
+      if (userClosed) {
+        const st = await fetchOrderStatus(data.orderId);
+
+        if (st === "paid" || st === "failed") {
+          // Success / failed page shows its state immediately (no polling)
+          router.push(`/payment-success?order_id=${data.orderId}`);
+          return;
+        }
+        if (st === "cancelled") {
+          router.push(`/payment-cancel?order_id=${data.orderId}`);
+          return;
+        }
+
+        // Nothing went through — cancel the order and release the coupon
         await fetch(`/api/orders/${data.orderId}/cancel`, { method: "POST" }).catch(() => {});
+        setPayStatus("cancelled");
         setProcessing(false);
         return;
       }
 
-      // Payment attempt finished — verify the result on the success page
+      // A payment attempt finished — confirm it and jump straight to the result
+      const orderStatus = await verifyOrderStatus(data.orderId);
+
+      if (orderStatus === "cancelled") {
+        router.push(`/payment-cancel?order_id=${data.orderId}`);
+        return;
+      }
+
+      // paid / failed render instantly; still-pending (e.g. UPI) keeps
+      // checking on the success page
       router.push(`/payment-success?order_id=${data.orderId}`);
     } catch (e: any) {
       console.error(e);
@@ -509,6 +574,28 @@ function CheckoutContent() {
                       </div>
                     </div>
 
+                    {/* Payment status message */}
+                    {payStatus === "confirming" && (
+                      <div
+                        id="payment-status"
+                        data-status="confirming"
+                        className="flex items-center gap-2.5 p-3.5 rounded-2xl border border-amber-400/30 bg-amber-400/10 text-xs font-semibold text-amber-400"
+                      >
+                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                        Confirming your payment…
+                      </div>
+                    )}
+                    {payStatus === "cancelled" && (
+                      <div
+                        id="payment-status"
+                        data-status="cancelled"
+                        className="p-3.5 rounded-2xl border border-orange-400/30 bg-orange-400/10 text-xs font-semibold text-orange-400"
+                      >
+                        Payment cancelled — you were not charged. Your coupon is
+                        available to use again.
+                      </div>
+                    )}
+
                     {/* Pay Button */}
                     <Button
                       onClick={handleCheckout}
@@ -518,7 +605,9 @@ function CheckoutContent() {
                       {processing ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Securing Order...
+                          {payStatus === "confirming"
+                            ? "Confirming payment..."
+                            : "Securing Order..."}
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">

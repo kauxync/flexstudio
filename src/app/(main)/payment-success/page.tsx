@@ -30,8 +30,6 @@ export default function PaymentSuccessPage() {
         if (data?.status === "paid") {
           setStatus("paid");
           window.dispatchEvent(new Event("cart-updated"));
-        } else if (data?.status === "cancelled") {
-          setStatus("cancelled");
         }
       })
       .catch(() => {});
@@ -78,24 +76,31 @@ export default function PaymentSuccessPage() {
     checkOrder();
   }, [checkOrder]);
 
-  // Poll for pending (max 10 times, 3s apart = 30s total)
+  // Poll for pending (max 12 times, 1.5s apart = 18s total)
   useEffect(() => {
-    if (status !== "pending" || pollCount >= 10) return;
+    if (status !== "pending" || pollCount >= 12) return;
     const timer = setTimeout(() => {
       setPollCount((p) => p + 1);
       checkOrder();
-    }, 3000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [status, pollCount, checkOrder]);
 
   // Only show failed after all polling exhausted — the payment is abandoned,
   // so cancel the order and release the coupon usage
   useEffect(() => {
-    if (status === "pending" && pollCount >= 10) {
+    if (status === "pending" && pollCount >= 12) {
       setStatus("failed");
       cancelAbandonedOrder();
     }
   }, [status, pollCount, cancelAbandonedOrder]);
+
+  // Payment confirmed as failed — cancel the order & release the coupon too
+  useEffect(() => {
+    if (status === "failed") {
+      cancelAbandonedOrder();
+    }
+  }, [status, cancelAbandonedOrder]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -133,7 +138,7 @@ export default function PaymentSuccessPage() {
               <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
             </div>
             <h1 className="text-2xl font-bold mb-2">Verifying Payment</h1>
-            <p className="text-muted-foreground mb-6">Checking payment status... ({pollCount + 1}/10)</p>
+            <p className="text-muted-foreground mb-6">Checking payment status... ({pollCount + 1}/12)</p>
             <div className="flex items-center justify-center gap-3">
               <Button onClick={checkOrder} variant="outline" className="rounded-xl px-6">Check Now</Button>
               <Link href="/dashboard/orders"><Button className="rounded-xl px-6">View Orders</Button></Link>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { fetchCashfreeOrder } from "@/lib/cashfree";
+import { fetchCashfreeOrder, fetchCashfreePayments } from "@/lib/cashfree";
 import { cancelOrder, ensureCouponUsage } from "@/lib/order-actions";
 
 export async function GET(
@@ -33,9 +33,10 @@ export async function GET(
       }
     }
 
-    // If order is still pending, try to verify with Cashfree
+    // If the order isn't settled yet, verify with Cashfree
+    // (also re-check "failed": a later attempt may have succeeded)
     // Cashfree GET /pg/orders/{order_id} expects the merchant order ID, not cf_order_id
-    if (order.status === "pending") {
+    if (order.status === "pending" || order.status === "failed") {
       try {
         const cfOrder = await fetchCashfreeOrder(orderId);
         const newStatus = cfOrder.order_status?.toLowerCase();
@@ -65,6 +66,20 @@ export async function GET(
         ) {
           const result = await cancelOrder(orderId, { verifyCashfree: false });
           order.status = result.ok ? "cancelled" : order.status;
+        } else {
+          // Order is still active — check the payment attempts so a declined
+          // payment can be reported instantly instead of waiting for a webhook
+          const payments = await fetchCashfreePayments(orderId);
+          const latest = payments[payments.length - 1];
+          const paymentStatus = (latest?.payment_status || "").toUpperCase();
+
+          if (paymentStatus === "FAILED" || paymentStatus === "USER_DROPPED") {
+            await prisma.order.updateMany({
+              where: { id: orderId, status: "pending" },
+              data: { status: "failed" },
+            });
+            order.status = "failed";
+          }
         }
       } catch (cfError) {
         console.error("[ORDER_STATUS_CHECK]", cfError);

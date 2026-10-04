@@ -91,6 +91,27 @@ export async function fetchCashfreeOrder(orderId: string) {
   return data;
 }
 
+export interface CashfreePayment {
+  cf_payment_id?: string | number;
+  payment_status?: string;
+  payment_message?: string;
+  payment_time?: string;
+}
+
+export async function fetchCashfreePayments(orderId: string): Promise<CashfreePayment[]> {
+  const res = await fetch(`${BASE_URL}/orders/${orderId}/payments`, {
+    method: "GET",
+    headers: headers(),
+  });
+
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.payments)) return data.payments;
+  return [];
+}
+
 export async function cancelCashfreeOrder(orderId: string): Promise<boolean> {
   try {
     // Terminate Order API — stops any further payment against this order
