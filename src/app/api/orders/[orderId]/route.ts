@@ -10,9 +10,7 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const sessionUser = session?.user as { id?: string; role?: string } | undefined;
 
     const { orderId } = await params;
 
@@ -25,11 +23,14 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const userRole = (session.user as any)?.role;
-    const isAdmin = userRole === "admin" || userRole === "super_admin";
-
-    if (!isAdmin && order.userId !== (session.user as any).id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Logged-in users can only read their own orders (admins can read all).
+    // Guests (no session) may still poll status so the payment popup can
+    // confirm a result — they get a limited payload below.
+    if (sessionUser) {
+      const isAdmin = sessionUser.role === "admin" || sessionUser.role === "super_admin";
+      if (!isAdmin && sessionUser.id !== order.userId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     // If order is still pending, try to verify with Cashfree
@@ -74,6 +75,13 @@ export async function GET(
     if (order.status === "paid") {
       await prisma.cartItem.deleteMany({
         where: { userId: order.userId },
+      });
+    }
+
+    // Guest checkout: return status only — no customer/user details
+    if (!sessionUser) {
+      return NextResponse.json({
+        order: { id: order.id, status: order.status, total: order.total },
       });
     }
 

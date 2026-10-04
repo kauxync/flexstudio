@@ -216,11 +216,21 @@ function CheckoutContent() {
         return;
       }
 
-      // Launch Cashfree checkout
-      cashfreeRef.current.checkout({
+      // Launch Cashfree checkout as a popup on this page (no redirect away)
+      const checkoutResult = await cashfreeRef.current.checkout({
         paymentSessionId: data.paymentSessionId,
-        redirectTarget: "_self",
+        redirectTarget: "_modal",
       });
+
+      // Popup closed (or checkout errored) — cancel order & release coupon
+      if (checkoutResult?.error) {
+        await fetch(`/api/orders/${data.orderId}/cancel`, { method: "POST" }).catch(() => {});
+        setProcessing(false);
+        return;
+      }
+
+      // Payment attempt finished — verify the result on the success page
+      router.push(`/payment-success?order_id=${data.orderId}`);
     } catch (e: any) {
       console.error(e);
       alert("Order checkout encountered an error. Please try again.");
